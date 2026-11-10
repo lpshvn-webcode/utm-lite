@@ -1,0 +1,1988 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UTM Аналитика</title>
+<meta name="referrer" content="no-referrer">
+<script>
+(function () {
+  var t = 'light';
+  try { var p = JSON.parse(localStorage.getItem('prefs:v1')); if (p && /^(light|dark|system)$/.test(p.theme)) t = p.theme; } catch (e) { /* нет prefs — светлая */ }
+  var q = /[?&]theme=(light|dark|system)/.exec(location.search); if (q) t = q[1];
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* UTM Lite. Вид, токены, сетка, карточки, период, шторка — перенесены из дашборда сквозной аналитики; здесь тот же стиль. */
+:root{
+  color-scheme:light;
+  --ink:#232323; --ink-2:#2C2C2C; --ink-3:#3A3A3A;
+  --violet:#F05A35; --violet-2:#FF8657; --violet-deep:#B93F1C;
+  --lav:#FFF0EA; --lav-2:#FFE3D8; --lilac:#FFC4AF;
+  --accent-ink:#B93F1C; --accent-ink-2:#8A5A49;
+  --bg:#EDEDED; --pane:#FAFAFA; --pane-2:#F8F7F6; --card:#FFFFFF; --card-line:#F4F2F1; --line:#ECECEC; --line-2:#EFEDEC; --line-3:#E2DFDD;
+  --raise:#FFFFFF; --raise-mut:#FCFCFC; --pop:#FFFFFF; --pop-line:#F0F0F0; --knob:#FFFFFF;
+  --fill:#F5F3F2; --fill-2:#EFEFEF; --hover:#F1EEEC; --hover-row:#FDFBFA;
+  --col:#F6F5F4; --col-line:#F0EEED; --col-mut:#F3F3F3; --thumb:#F1ECE9; --track:#F4EEEB; --ico-ring:#FBF5F1; --ring:#FFFFFF;
+  --ctl-line:#CFCFCF; --dis:#CDCDCD; --scroll:#DCD8D6;
+  --text:#1E1E1E; --text-2:#555555; --text-3:#6A6A6A; --muted:#7A7A7A; --muted-2:#A8A8A8; --muted-3:#CACACA;
+  --up-bg:#EAF7EF; --up:#1E8E52; --down-bg:#FDECEF; --down:#D1405F;
+  --stuck-bg:#FFF3EC; --stuck-line:#FFD8C8;
+  --inv:#232323; --inv-t:#FFFFFF; --dot-lost:#3A3A3A; --toast:#232323; --dock:rgba(35,35,35,.94);
+  --side-a:#2C2C2C; --side-b:#232323; --side-glow:#373737; --side-line:transparent;
+  --app-bg:rgba(255,255,255,.55); --app-line:rgba(255,255,255,.9); --app-sh:0 30px 80px -40px rgba(57,57,57,.35);
+  --main-top:#FFFFFF; --main-line:#FFFFFF; --main-sh:0 1px 0 rgba(255,255,255,.8) inset, 0 20px 50px -30px rgba(57,57,57,.25);
+  --scrim:rgba(30,30,30,.3); --scrim-2:rgba(30,30,30,.22);
+  --gb:#F8F5F4; --grid:#F4F0EE; --dtrack:#F6F4F3; --sel-row:linear-gradient(90deg,#FBF5F2,#FEFCFB);
+  --sheet-a:linear-gradient(180deg,#F4E2D7,#FAB59D); --sheet-b:linear-gradient(180deg,#F7EBE5,#F2DFD4);
+  --bg-img:radial-gradient(1200px 600px at 85% -10%, #fff 0, transparent 60%), radial-gradient(900px 600px at -10% 110%, #FCF7F4 0, transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900' viewBox='0 0 1600 900' fill='none' stroke='%23ffffff' stroke-opacity='.75' stroke-width='1.2'%3E%3Cpath d='M-50 620C300 480 520 760 880 600s620-300 800-180'/%3E%3Cpath d='M-50 660C300 520 520 800 880 640s620-300 800-180'/%3E%3Cpath d='M-50 700C300 560 520 840 880 680s620-300 800-180'/%3E%3Cpath d='M-50 200C260 80 600 300 900 160s520-160 760-60'/%3E%3Cpath d='M-50 240C260 120 600 340 900 200s520-160 760-60'/%3E%3C/svg%3E");
+  --r-xl:30px; --r-lg:24px; --r-md:18px; --r-sm:12px;
+  --sh-card:0 1px 2px rgba(25,25,25,.04), 0 14px 34px -16px rgba(86,86,86,.18);
+  --sh-lift:0 2px 4px rgba(25,25,25,.05), 0 24px 44px -18px rgba(86,86,86,.30);
+  --sh-lc:0 1px 2px rgba(25,25,25,.04), 0 8px 18px -12px rgba(86,86,86,.25);
+  --sh-knob:0 2px 8px -2px rgba(57,57,57,.2);
+  --sh-pop:0 1px 2px rgba(30,30,30,.05), 0 24px 48px -18px rgba(30,30,30,.35);
+  --font:"Helvetica Neue", Helvetica, Inter, system-ui, sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+/* тёмная тема: одни и те же токены для «Тёмная» и «Как в системе» при тёмной системе */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --lav:rgba(240,90,53,.14); --lav-2:rgba(240,90,53,.26); --lilac:rgba(240,90,53,.45);
+  --accent-ink:#FF9E7D; --accent-ink-2:#E3A48E;
+  --bg:#0F1012; --pane:#17181B; --pane-2:#1A1B1E; --card:#1E1F23; --card-line:#2A2B30; --line:#2C2D32; --line-2:#323338; --line-3:#3A3B41;
+  --raise:#25262B; --raise-mut:#202125; --pop:#202125; --pop-line:#313237; --knob:#3A3B41;
+  --fill:#2A2B30; --fill-2:#33343A; --hover:#2F3036; --hover-row:#222327;
+  --col:#1A1B1E; --col-line:#26272C; --col-mut:#18191C; --thumb:#2A2B30; --track:#2A2B30; --ico-ring:rgba(240,90,53,.12); --ring:#1B1C1F;
+  --ctl-line:#55565D; --dis:#4A4B51; --scroll:#3A3B41;
+  --text:#ECECEE; --text-2:#C8C8CC; --text-3:#ABABB1; --muted:#9E9EA5; --muted-2:#8C8C93; --muted-3:#55565C;
+  --up-bg:rgba(52,190,115,.15); --up:#5DD497; --down-bg:rgba(240,90,120,.15); --down:#FF8FA6;
+  --stuck-bg:#30282A; --stuck-line:rgba(240,90,53,.28);
+  --inv:#E9E9EC; --inv-t:#18191B; --dot-lost:#8E8E95; --toast:#2E2F34; --dock:rgba(22,23,25,.94);
+  --side-a:#141517; --side-b:#0C0D0E; --side-glow:#1E1F22; --side-line:rgba(255,255,255,.05);
+  --app-bg:rgba(255,255,255,.025); --app-line:rgba(255,255,255,.06); --app-sh:0 30px 80px -40px rgba(0,0,0,.8);
+  --main-top:#1B1C1F; --main-line:rgba(255,255,255,.06); --main-sh:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -30px rgba(0,0,0,.6);
+  --scrim:rgba(0,0,0,.55); --scrim-2:rgba(0,0,0,.45);
+  --gb:#25262B; --grid:#2C2D32; --dtrack:#2A2B30; --sel-row:rgba(240,90,53,.08);
+  --sheet-a:linear-gradient(180deg,rgba(240,90,53,.28),rgba(240,90,53,.5)); --sheet-b:linear-gradient(180deg,#3A3B41,#303137);
+  --bg-img:radial-gradient(1200px 600px at 85% -10%, rgba(255,255,255,.045) 0, transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(240,90,53,.05) 0, transparent 60%);
+  --sh-card:0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.6);
+  --sh-lift:0 2px 4px rgba(0,0,0,.4), 0 24px 44px -18px rgba(0,0,0,.75);
+  --sh-lc:0 1px 2px rgba(0,0,0,.3), 0 8px 18px -12px rgba(0,0,0,.6);
+  --sh-knob:0 2px 8px -2px rgba(0,0,0,.6);
+  --sh-pop:0 1px 2px rgba(0,0,0,.4), 0 24px 48px -18px rgba(0,0,0,.75);
+}
+@media (prefers-color-scheme:dark){
+  :root[data-theme="system"]{
+    color-scheme:dark;
+    --lav:rgba(240,90,53,.14); --lav-2:rgba(240,90,53,.26); --lilac:rgba(240,90,53,.45);
+    --accent-ink:#FF9E7D; --accent-ink-2:#E3A48E;
+    --bg:#0F1012; --pane:#17181B; --pane-2:#1A1B1E; --card:#1E1F23; --card-line:#2A2B30; --line:#2C2D32; --line-2:#323338; --line-3:#3A3B41;
+    --raise:#25262B; --raise-mut:#202125; --pop:#202125; --pop-line:#313237; --knob:#3A3B41;
+    --fill:#2A2B30; --fill-2:#33343A; --hover:#2F3036; --hover-row:#222327;
+    --col:#1A1B1E; --col-line:#26272C; --col-mut:#18191C; --thumb:#2A2B30; --track:#2A2B30; --ico-ring:rgba(240,90,53,.12); --ring:#1B1C1F;
+    --ctl-line:#55565D; --dis:#4A4B51; --scroll:#3A3B41;
+    --text:#ECECEE; --text-2:#C8C8CC; --text-3:#ABABB1; --muted:#9E9EA5; --muted-2:#8C8C93; --muted-3:#55565C;
+    --up-bg:rgba(52,190,115,.15); --up:#5DD497; --down-bg:rgba(240,90,120,.15); --down:#FF8FA6;
+    --stuck-bg:#30282A; --stuck-line:rgba(240,90,53,.28);
+    --inv:#E9E9EC; --inv-t:#18191B; --dot-lost:#8E8E95; --toast:#2E2F34; --dock:rgba(22,23,25,.94);
+    --side-a:#141517; --side-b:#0C0D0E; --side-glow:#1E1F22; --side-line:rgba(255,255,255,.05);
+    --app-bg:rgba(255,255,255,.025); --app-line:rgba(255,255,255,.06); --app-sh:0 30px 80px -40px rgba(0,0,0,.8);
+    --main-top:#1B1C1F; --main-line:rgba(255,255,255,.06); --main-sh:0 1px 0 rgba(255,255,255,.03) inset, 0 20px 50px -30px rgba(0,0,0,.6);
+    --scrim:rgba(0,0,0,.55); --scrim-2:rgba(0,0,0,.45);
+    --gb:#25262B; --grid:#2C2D32; --dtrack:#2A2B30; --sel-row:rgba(240,90,53,.08);
+    --sheet-a:linear-gradient(180deg,rgba(240,90,53,.28),rgba(240,90,53,.5)); --sheet-b:linear-gradient(180deg,#3A3B41,#303137);
+    --bg-img:radial-gradient(1200px 600px at 85% -10%, rgba(255,255,255,.045) 0, transparent 60%), radial-gradient(900px 600px at -10% 110%, rgba(240,90,53,.05) 0, transparent 60%);
+    --sh-card:0 1px 2px rgba(0,0,0,.35), 0 14px 34px -16px rgba(0,0,0,.6);
+    --sh-lift:0 2px 4px rgba(0,0,0,.4), 0 24px 44px -18px rgba(0,0,0,.75);
+    --sh-lc:0 1px 2px rgba(0,0,0,.3), 0 8px 18px -12px rgba(0,0,0,.6);
+    --sh-knob:0 2px 8px -2px rgba(0,0,0,.6);
+    --sh-pop:0 1px 2px rgba(0,0,0,.4), 0 24px 48px -18px rgba(0,0,0,.75);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--font); color:var(--text); background:var(--bg);
+  -webkit-font-smoothing:antialiased; font-feature-settings:"tnum" 1;
+  background-image:var(--bg-img);
+  background-size:auto, auto, cover; background-attachment:fixed;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+:focus-visible{outline:2px solid var(--violet);outline-offset:2px;border-radius:10px}
+.app{
+  margin:22px; min-height:calc(100vh - 44px); padding:12px;
+  background:var(--app-bg); border:1px solid var(--app-line);
+  border-radius:calc(var(--r-xl) + 8px); box-shadow:var(--app-sh);
+  backdrop-filter:blur(18px);
+  display:grid; grid-template-columns:68px 292px minmax(0,1fr); gap:12px;
+  transition:grid-template-columns .45s var(--ease);
+}
+.app.collapsed{grid-template-columns:68px 0 minmax(0,1fr)}
+.app.collapsed .side{opacity:0;pointer-events:none;transform:translateX(-12px);visibility:hidden}
+.rail{display:flex;flex-direction:column;align-items:center;gap:12px;padding:10px 0;position:sticky;top:34px;height:calc(100vh - 68px);align-self:start}
+.logo{width:44px;height:44px;display:grid;place-items:center;margin-bottom:6px;color:var(--text)}
+.logo img{display:block;border-radius:28%}
+.rail .sep{width:28px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--lilac),transparent);margin:2px 0 6px}
+.rb{position:relative;width:46px;height:46px;border-radius:15px;display:grid;place-items:center;color:var(--text-2);
+  background:var(--raise);box-shadow:var(--sh-lc);transition:transform .2s var(--ease),background .2s}
+.rb:hover{transform:translateY(-2px)}
+.rb.on{background:var(--inv);color:var(--inv-t)}
+.rb.on::before{content:"";position:absolute;left:-12px;top:10px;bottom:10px;width:4px;border-radius:0 4px 4px 0;background:var(--violet)}
+.rail .grow{flex:1}
+.side{
+  position:relative; overflow:hidden; border-radius:var(--r-lg); color:#F5EFEC; padding:18px 16px 16px;
+  background:radial-gradient(420px 260px at 20% 0%, var(--side-glow) 0, transparent 70%), linear-gradient(180deg,var(--side-a),var(--side-b));
+  box-shadow:inset 0 0 0 1px var(--side-line);
+  display:flex; flex-direction:column; transition:opacity .3s, transform .45s var(--ease), visibility .3s;
+  min-width:0; position:sticky; top:34px; height:calc(100vh - 68px); align-self:start; overflow-y:auto; scrollbar-width:none;
+}
+.side-h{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.side-h h1{font-size:21px;font-weight:600;margin:0;flex:1;letter-spacing:-.01em}
+.circ{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);color:#D4D4D4;transition:background .2s}
+.circ:hover{background:rgba(255,255,255,.14)}
+.side .grow{flex:1;min-height:24px}
+.main{background:linear-gradient(180deg,var(--main-top),var(--pane) 240px);border-radius:var(--r-lg);border:1px solid var(--main-line);
+  box-shadow:var(--main-sh);padding:20px 28px 0;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:16px}
+.top .grow{flex:1}
+.crumbs{display:flex;align-items:center;gap:12px;margin:18px 0 0;padding-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.crumbs .c{font-size:16.5px;color:var(--muted)}
+.crumbs .c b{color:var(--text);font-weight:500}
+.crumbs .sl{color:var(--muted-3)}
+.pill-n{font-size:13px;padding:3px 10px;border-radius:999px;background:var(--lav);color:var(--text-3)}
+.crumbs .grow{flex:1}
+.seg{display:flex;padding:4px;border-radius:14px;background:var(--fill);position:relative}
+.seg button{position:relative;z-index:1;padding:8px 14px;border-radius:11px;font-size:14px;color:var(--muted);transition:color .2s}
+.seg button[aria-pressed="true"]{color:var(--text)}
+.seg .knob{position:absolute;top:4px;bottom:4px;border-radius:11px;background:var(--knob);box-shadow:var(--sh-knob);transition:left .35s var(--ease),width .35s var(--ease)}
+.btn-v{display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:14px;color:#fff;font-size:15px;font-weight:500;text-decoration:none;
+  background:linear-gradient(135deg,var(--violet-2),var(--violet));box-shadow:0 10px 22px -10px rgba(245,112,64,.9);transition:transform .2s var(--ease),box-shadow .2s}
+.btn-v:hover{transform:translateY(-1px);box-shadow:0 14px 26px -10px rgba(245,112,64,.95)}
+.btn-v.spin svg,.btn-v.run svg{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.content{flex:1;padding:24px 0 28px;display:flex;flex-direction:column;gap:30px}
+.content>section{min-width:0}
+.sh{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px}
+.sh h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.015em}
+.sh .hint{font-size:13.5px;color:var(--muted)}
+.ghostbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--raise);font-size:14px;color:var(--text);text-decoration:none;transition:border-color .2s}
+.ghostbtn:hover{border-color:var(--lilac)}
+.ghostbtn svg{width:16px;height:16px}
+.rise{opacity:0;transform:translateY(14px);animation:rise .7s var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.k{position:relative;background:var(--card);border-radius:var(--r-lg);padding:20px 20px 18px;box-shadow:var(--sh-card);border:1px solid var(--card-line);
+  transition:transform .3s var(--ease),box-shadow .3s;overflow:hidden;min-height:196px;display:flex;flex-direction:column}
+.k:hover{transform:translateY(-4px);box-shadow:var(--sh-lift)}
+.k .lab{display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--muted);min-width:0}
+.k .lab .chip{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--lav);color:var(--violet);flex:none}
+.k .val{font-size:30px;font-weight:600;letter-spacing:-.025em;margin:10px 0 4px;white-space:nowrap}
+.k .row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.dl{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;font-size:12.5px;font-weight:600}
+.dl.up{background:var(--up-bg);color:var(--up)} .dl.down{background:var(--down-bg);color:var(--down)}
+.k.hero{background:radial-gradient(320px 220px at 100% 0%, rgba(247,141,102,.55), transparent 65%), linear-gradient(150deg,#414141,#242424 70%);color:#fff;border-color:transparent}
+.k.hero .lab{color:#D6D6D6} .k.hero .lab .chip{background:rgba(255,255,255,.1);color:#fff}
+.k.hero .row,.k.hero .sub2{color:#C7C7C7}
+.k.hero .dl.up{background:rgba(110,230,160,.16);color:#8CF0B4} .k.hero .dl.down{background:rgba(255,120,150,.18);color:#FFA3B8}
+.k .sub2{font-size:13px;color:var(--muted);margin-bottom:12px}
+.btn-v:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.ghostbtn:disabled{opacity:.45;cursor:not-allowed}
+.btn-v.sm{padding:10px 22px;font-size:14.5px}
+.btn-v.busy{pointer-events:none;opacity:.8}
+.btn-v.busy svg{animation:spin .8s linear infinite}
+.card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--sh-card);border:1px solid var(--card-line);padding:20px 22px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.card-h h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.card-h .hint{font-size:13px;color:var(--muted)}
+.tabs{display:flex;padding:4px;border-radius:14px;background:var(--fill);position:relative}
+.tabs button{position:relative;z-index:1;display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:11px;font-size:13.5px;color:var(--muted);transition:color .2s}
+.tabs button[aria-selected="true"]{color:var(--text);font-weight:500}
+.tabs button .ck{display:none;width:16px;height:16px;border-radius:50%;background:var(--inv);color:var(--inv-t);place-items:center}
+.tabs button[aria-selected="true"] .ck{display:grid}
+.tabs button .ck svg{width:11px;height:11px;stroke-width:3}
+.tabs .knob{position:absolute;top:4px;bottom:4px;border-radius:11px;background:var(--knob);box-shadow:var(--sh-knob);transition:left .35s var(--ease),width .35s var(--ease)}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chart{position:relative;flex:1;min-height:290px}
+.chart svg{display:block;width:100%;height:100%}
+.chart:focus-visible{outline-offset:6px}
+.gb{fill:var(--gb)}
+.rb2{transform-box:fill-box;transform-origin:50% 100%;animation:grow .8s var(--ease) both}
+@keyframes grow{from{transform:scaleY(0)}}
+.ln{fill:none;stroke:var(--inv);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.ln.draw{animation:draw 1.4s .35s var(--ease) both}
+@keyframes draw{from{stroke-dashoffset:var(--len)}}
+.ax{font-size:11.5px;fill:var(--muted-2)}
+.grid{stroke:var(--grid);stroke-dasharray:3 5}
+.tt{position:absolute;pointer-events:none;transform:translate(-50%,-100%);background:var(--toast);color:#fff;border-radius:14px;padding:10px 12px;font-size:12.5px;line-height:1.5;
+  white-space:nowrap;box-shadow:0 14px 30px -10px rgba(25,25,25,.6);border:1px solid var(--side-line);opacity:0;transition:opacity .15s, left .12s var(--ease), top .12s var(--ease)}
+.tt.on{opacity:1}
+.tt b{font-size:13.5px}
+.tt i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.tbl{border-radius:var(--r-lg);background:var(--card);box-shadow:var(--sh-card);border:1px solid var(--card-line);overflow:hidden}
+.thead{height:48px;background:var(--pane-2);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.thead .r,.tr .r{text-align:right}
+.tr{min-height:72px;border-top:1px solid var(--line);font-size:14.5px;transition:background .25s;animation:rise .45s var(--ease) both;cursor:pointer}
+.tr:hover{background:var(--hover-row)}
+.tr.sel{background:var(--sel-row)}
+.empty{padding:40px;text-align:center;color:var(--muted);line-height:1.5}
+.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:4px}
+.empty .ghostbtn{margin-top:14px}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;background:var(--toast);color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;line-height:1.45;max-width:min(560px,calc(100vw - 32px));box-shadow:0 18px 40px -16px rgba(0,0,0,.6);border:1px solid var(--side-line);transition:all .35s var(--ease);z-index:50;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.nv{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;border-radius:14px;font-size:15px;color:#CFCFCF;margin-bottom:4px;transition:background .25s,color .25s}
+.nv span:not([data-ico]){flex:1;text-align:left}
+.nv:hover{background:rgba(255,255,255,.05);color:#fff}
+.nv.on{color:#fff;font-weight:500;background:linear-gradient(135deg,var(--violet-2),var(--violet) 55%,var(--violet-deep));box-shadow:0 10px 24px -10px rgba(240,90,53,.8)}
+.nv.on .badge{background:rgba(255,255,255,.22);color:#fff}
+.view[hidden]{display:none}
+.view{animation:viewIn .5s var(--ease)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}}
+.state{margin:28px 0;padding:40px 24px;border-radius:var(--r-lg);background:var(--card);border:1px solid var(--card-line);box-shadow:var(--sh-card);text-align:center;color:var(--muted);font-size:15px;line-height:1.5}
+.state[hidden]{display:none}
+.state b{display:block;color:var(--text);font-size:18px;margin-bottom:6px}
+.state .btn-v{margin:18px auto 0}
+.state .spin2{width:34px;height:34px;margin:0 auto 14px;border-radius:50%;border:3px solid var(--lav-2);border-top-color:var(--violet);animation:spin .8s linear infinite}
+.upd{font-size:13px;color:var(--muted-2);flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prof{position:relative;flex:none}
+.ava{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;color:#fff;letter-spacing:.02em;
+  background:linear-gradient(135deg,#FFB86B,#F0506E);box-shadow:0 0 0 3px var(--ring),0 6px 14px -6px rgba(0,0,0,.3);transition:transform .2s var(--ease),box-shadow .2s}
+button.ava:hover{transform:translateY(-1px)}
+.ava[aria-expanded="true"]{box-shadow:0 0 0 3px var(--ring),0 0 0 5px var(--lilac),0 6px 14px -6px rgba(0,0,0,.3)}
+.ava:focus-visible{outline-offset:4px;border-radius:50%}
+.pf-menu{position:absolute;top:calc(100% + 12px);right:0;z-index:28;width:328px;padding:8px;border-radius:24px;background:var(--pop);border:1px solid var(--pop-line);box-shadow:var(--sh-pop);
+  opacity:0;transform:translateY(-6px) scale(.97);transform-origin:top right;visibility:hidden;pointer-events:none;transition:opacity .2s,transform .25s var(--ease),visibility .2s}
+.pf-menu.on{opacity:1;transform:none;visibility:visible;pointer-events:auto}
+.pf-h{display:flex;align-items:center;gap:12px;padding:10px 10px 12px}
+.pf-h .ava{width:44px;height:44px;font-size:15px;box-shadow:none;flex:none}
+.pf-who{flex:1;min-width:0}
+.pf-who b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-who small{display:block;font-size:13px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-role{flex:none;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;background:var(--lav);color:var(--accent-ink)}
+.pf-sec{padding:10px 6px 4px}
+.pf-l{display:flex;align-items:baseline;justify-content:space-between;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:0 4px 8px}
+.pf-l em{font-style:normal;text-transform:none;letter-spacing:0;color:var(--muted);font-size:12px}
+.th-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.thm{display:flex;flex-direction:column;gap:7px;padding:6px 6px 8px;border-radius:14px;border:1.5px solid var(--line-2);background:var(--raise);font-size:12.5px;color:var(--text-2);transition:border-color .2s,box-shadow .2s,transform .2s var(--ease)}
+.thm:hover{border-color:var(--lilac);transform:translateY(-1px)}
+.thm[aria-pressed="true"]{border-color:var(--violet);box-shadow:0 0 0 3px rgba(240,90,53,.12);color:var(--text);font-weight:600}
+.th-pv{position:relative;display:block;height:40px;border-radius:9px;overflow:hidden;background:#EFEFEF;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.th-pv::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:11px;border-radius:4px;background:#2C2C2C}
+.th-pv::after{content:"";position:absolute;left:20px;right:5px;top:5px;height:13px;border-radius:4px;background:#fff;box-shadow:0 10px 0 -2px rgba(240,90,53,.55)}
+.th-pv.d{background:#17181B;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.th-pv.d::before{background:#0A0A0B}.th-pv.d::after{background:#2A2B30}
+.th-pv.s{background:linear-gradient(120deg,#EFEFEF 50%,#17181B 50%)}
+.th-pv.s::after{background:linear-gradient(120deg,#fff 50%,#2A2B30 50%)}
+.pf-sep{height:1px;margin:10px 6px 6px;background:var(--line)}
+.pf-it{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border-radius:14px;font-size:14.5px;text-align:left;color:var(--text);transition:background .15s}
+.pf-it:hover,.pf-it:focus-visible{background:var(--lav)}
+.pf-it svg{width:18px;height:18px;color:var(--muted)}
+.ml{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:20px 2px 10px}
+.ml:first-child{margin-top:4px}
+.ml span{text-transform:none;letter-spacing:0;color:var(--muted-2);font-size:12.5px}.mtiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.cbx{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--raise);border:1.5px solid var(--line-2);font-size:14px;cursor:pointer;transition:border-color .2s}
+.cbx:hover{border-color:var(--lilac)}
+.cbx input,.pk{appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0;border-radius:6px;border:1.5px solid var(--ctl-line);background:var(--raise) center/12px no-repeat;flex:none;transition:background-color .15s,border-color .15s}
+.cbx input:checked,.pk:checked{background-color:var(--violet);border-color:var(--violet);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")}
+.cbx input:focus-visible,.pk:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.cbx em{margin-left:auto;font-style:normal;font-size:12.5px;color:var(--muted-2)}
+.cbx:has(input:checked){border-color:var(--lilac)}
+.sy-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+.sy-row b{font-size:16px;font-weight:600;line-height:1.4;min-width:0}
+.sy-pct{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--accent-ink)}
+.sy-bar{position:relative;height:10px;border-radius:6px;background:var(--track);overflow:hidden}
+.sy-bar i{position:relative;display:block;height:100%;width:0;border-radius:6px;background:linear-gradient(90deg,var(--violet-2),var(--violet));transition:width .9s var(--ease);overflow:hidden}
+.sy-bar i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:translateX(-100%);animation:sy-run 1.6s ease-in-out infinite}
+@keyframes sy-run{to{transform:translateX(100%)}}
+/* период: 7 · 30 · ▾ + меню + календарь — переиспользуемый блок .per (см. periodPicker в скрипте) */
+.per{position:relative}
+.seg [data-more]{display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 10px;white-space:nowrap}
+.seg [data-more] .pm-c svg{width:16px;height:16px;display:block;transition:transform .3s var(--ease)}
+.seg [data-more][aria-expanded="true"] .pm-c svg{transform:rotate(180deg)}
+.pm-t:empty{display:none}
+.pmenu,.cal{position:absolute;top:calc(100% + 8px);right:0;z-index:26;background:var(--pop);border:1px solid var(--pop-line);
+  box-shadow:var(--sh-pop);opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top right;pointer-events:none;visibility:hidden;transition:opacity .18s,transform .25s var(--ease),visibility .18s}
+.pmenu.on,.cal.on{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.pmenu{min-width:210px;border-radius:18px;padding:6px}
+.pmenu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;font-size:14px;text-align:left;outline:0;transition:background .15s}
+.pmenu button:hover,.pmenu button:focus-visible{background:var(--lav)}
+.pmenu button svg{width:17px;height:17px;color:var(--violet)}
+.pmenu button[aria-checked="true"]{font-weight:600}
+.pmenu button[data-cal]{border-top:1px solid var(--line);border-radius:0 0 12px 12px;margin-top:4px;padding-top:12px}
+.cal{border-radius:24px;padding:16px 18px;width:max-content;z-index:27}
+.cal-q{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cal-q button{padding:7px 12px;border-radius:999px;background:var(--fill);font-size:13px;color:var(--text-2);transition:background .2s,color .2s}
+.cal-q button:hover{background:var(--lav)}
+.cal-q button[aria-pressed="true"]{background:var(--inv);color:var(--inv-t)}
+.cal-ms{display:flex;gap:24px}
+.cal-m{width:266px}
+.cal-mh{display:flex;align-items:center;gap:8px;height:34px;font-weight:600;font-size:15px}
+.cal-mh span{flex:1;text-align:center}
+.cal-nav{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--fill);transition:background .2s}
+.cal-nav:hover{background:var(--lav)}
+.cal-nav:disabled{opacity:.35;cursor:default}
+.cal-nav svg{width:16px;height:16px}
+.cal-nav.ph{visibility:hidden}
+.cal-g{display:grid;grid-template-columns:repeat(7,38px);row-gap:3px;margin-top:8px}
+.cal-g .wd{height:26px;line-height:26px;text-align:center;font-size:11.5px;color:var(--muted-2);text-transform:uppercase;letter-spacing:.03em}
+.cal-g .d{height:36px;padding:0;font-size:13.5px;display:grid;place-items:center;transition:background .12s}
+.cal-g .d span{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;transition:background .12s,color .12s}
+.cal-g .d:not(:disabled):hover span{background:var(--hover)}
+.cal-g .d.in{background:var(--lav)}
+.cal-g .d.s{background:linear-gradient(90deg,transparent 50%,var(--lav) 50%)}
+.cal-g .d.e{background:linear-gradient(90deg,var(--lav) 50%,transparent 50%)}
+.cal-g .d.s.e{background:none}
+.cal-g .d.s span,.cal-g .d.e span,.cal-g .d.s:hover span,.cal-g .d.e:hover span{background:var(--violet)!important;color:#fff;font-weight:600}
+.cal-g .d.td span{box-shadow:inset 0 0 0 1.5px var(--lilac)}
+.cal-g .d:disabled{color:var(--dis);cursor:default}
+.cal-g .d:focus-visible{outline:0}.cal-g .d:focus-visible span{outline:2px solid var(--violet);outline-offset:-2px}
+.cal-f{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.cal-f .sel{flex:1;font-size:13.5px;color:var(--muted)}
+.cal-f .sel b{color:var(--text);font-weight:600}
+.dd{position:relative}
+.dd-btn{display:flex;align-items:center;gap:10px;padding:5px 5px 5px 14px;border-radius:14px;border:1px solid var(--line);background:var(--raise);font-size:14px;color:var(--text);transition:border-color .2s,box-shadow .2s}
+.dd-btn:hover{border-color:var(--lilac)}
+.dd.open .dd-btn{border-color:var(--violet);box-shadow:0 0 0 4px rgba(240,90,53,.12)}
+.dd-btn .lbl{color:var(--muted);font-size:13.5px}
+.dd-btn .cur{font-weight:500;max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dd-btn .chev{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--fill);transition:transform .3s var(--ease),background .2s;flex:none}
+.dd-btn .chev svg{width:16px;height:16px}
+.dd.open .chev{transform:rotate(180deg);background:var(--lav);color:var(--violet)}
+.dd-menu{position:absolute;top:calc(100% + 8px);left:0;min-width:100%;z-index:25;background:var(--pop);border:1px solid var(--pop-line);border-radius:18px;padding:6px;max-height:340px;overflow-y:auto;
+  box-shadow:var(--sh-pop);opacity:0;transform:translateY(-6px) scale(.98);transform-origin:top left;pointer-events:none;visibility:hidden;transition:opacity .18s,transform .25s var(--ease),visibility .18s}
+.dd.open .dd-menu{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+.dd-opt{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--text);white-space:nowrap;text-align:left;outline:0;transition:background .15s}
+.dd-opt.hl{background:var(--lav)}
+.dd-opt .ck2{width:18px;height:18px;display:grid;place-items:center;color:var(--violet);opacity:0}
+.dd-opt .ck2 svg{width:16px;height:16px;stroke-width:2.6}
+.dd-opt[aria-selected="true"]{font-weight:600}
+.dd-opt[aria-selected="true"] .ck2{opacity:1}
+.dd-opt .sub{margin-left:auto;padding:2px 8px;border-radius:999px;background:var(--fill);color:var(--muted);font-size:12px;font-weight:500}
+.dd-opt.hl .sub{background:var(--raise)}
+.scrim{position:fixed;inset:0;background:var(--scrim-2);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:30}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:12px;right:12px;bottom:12px;width:min(470px,calc(100vw - 24px));background:var(--pop);border-radius:28px;box-shadow:-30px 0 80px -30px rgba(0,0,0,.45);z-index:31;transform:translateX(112%);transition:transform .5s var(--ease),visibility .5s;overflow-y:auto;padding:16px 20px 24px;visibility:hidden}
+.drawer.on{transform:none;visibility:visible}
+.dw-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:14px;color:var(--muted)}
+.dw-close{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--fill);color:var(--text);transition:background .2s;flex:none}
+.dw-close:hover{background:var(--fill-2)}
+.drawer h3{margin:16px 0 4px;font-size:20px;font-weight:600;letter-spacing:-.015em}
+.drawer .sub{font-size:13.5px;color:var(--muted)}
+.drawer h4{margin:22px 0 10px;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.dw-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.dw-tags .stp{font-size:13px}
+.kv{display:grid;grid-template-columns:130px 1fr;gap:10px 14px;margin-top:14px;font-size:14px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.dw-cta{margin-top:16px;justify-content:center;width:100%;padding:13px 18px;font-size:15.5px}
+.tg{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;line-height:1.35}
+.tg svg{width:12px;height:12px;stroke-width:2.2}
+.tg.q{background:var(--lav);color:var(--accent-ink)}
+.tg.nq{background:var(--fill);color:var(--text-3)}
+.tg.sum{background:var(--inv);color:var(--inv-t);font-weight:600}
+.lt{border-radius:var(--r-lg);background:var(--card);box-shadow:var(--sh-card);border:1px solid var(--card-line);overflow:hidden}
+.lt-h{height:46px;background:var(--pane-2);font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-3)}
+.lt-h .r,.lr .r{text-align:right;justify-self:end}
+.lr{position:relative;min-height:66px;border-top:1px solid var(--line);font-size:14px;transition:background .25s;cursor:pointer;animation:rise .45s var(--ease) both}
+.lr:hover{background:var(--hover-row)}
+.stp{justify-self:start;display:inline-block;max-width:100%;padding:4px 10px;border-radius:999px;font-size:12.5px;font-weight:500;background:var(--lav);color:var(--accent-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.more{display:block;width:100%;padding:14px;border-top:1px solid var(--line);font-size:14px;font-weight:500;color:var(--accent-ink);transition:background .2s}
+.more:hover{background:var(--hover-row)}
+.ghostbtn.sm{padding:7px 11px;font-size:13.5px;border-radius:11px}
+.ghostbtn.danger{color:var(--down)}
+.btn-v.busy svg,.ghostbtn.busy svg{animation:spin .8s linear infinite}
+.sel{--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23878787' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  appearance:none;-webkit-appearance:none;width:100%;height:44px;padding:0 40px 0 14px;border-radius:14px;border:1px solid var(--line);font:inherit;font-size:14.5px;color:var(--text);cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.sel,.sel:focus{background:var(--raise) var(--chev) right 13px center/16px no-repeat}
+.sel:hover{border-color:var(--lilac)}
+.sel:focus-visible{outline:0;border-color:var(--violet);box-shadow:0 0 0 4px rgba(240,90,53,.12)}
+.tin:hover{border-color:var(--lilac)}
+.tin:focus,.tin:focus-visible{outline:0;background:var(--raise);border-color:var(--violet);box-shadow:0 0 0 4px rgba(240,90,53,.12)}
+/* ---------- UTM Lite: то, чего нет у донора ---------- */
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mark{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none;
+  background:radial-gradient(circle at 30% 25%,#F9AA8D,var(--violet) 60%,var(--violet-deep));box-shadow:0 10px 20px -8px rgba(245,112,64,.7), 0 0 0 4px var(--ico-ring)}
+.logo-img{display:block;object-fit:contain;border-radius:28%}
+.top-n{display:none;align-items:center;gap:10px;min-width:0}
+.top-n b{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-foot{display:flex;align-items:flex-start;gap:10px;padding:12px;border-radius:14px;background:rgba(255,255,255,.05);color:#CFCFCF;font-size:13px;line-height:1.4}
+.side-foot svg{margin-top:1px}
+.badge{font-size:12px;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.1);color:#F9EFE9}
+.nv.on .badge{background:rgba(255,255,255,.22);color:#fff}
+.btn-v.full{width:100%;margin-top:18px}
+.btn-v{border:0;font-family:inherit}
+.btn-v.sm.ghost{box-shadow:none}
+.tabs .cnt{color:var(--muted-2);font-weight:400}
+
+/* вход */
+.login{max-width:440px;margin:0 auto;padding:8vh 20px 40px}
+.brand{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:600;margin-bottom:22px}
+.login .card{padding:28px;margin-bottom:18px}
+.login h1{font-size:24px;margin:0 0 6px;font-weight:600}
+.sub-p{color:var(--muted);margin:0 0 20px;font-size:15px;line-height:1.5}
+.msg{margin-top:16px;padding:12px 14px;border-radius:14px;font-size:14px;line-height:1.45;background:var(--lav)}
+.msg.err{background:var(--down-bg);color:var(--down)}
+.msg.ok{background:var(--up-bg);color:var(--up)}
+
+/* поля */
+.tin{width:100%;height:44px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--raise);font:inherit;font-size:15px;color:var(--text);transition:border-color .2s,box-shadow .2s}
+.tin::placeholder{color:var(--muted-2)}
+.tin:disabled{opacity:.55;cursor:not-allowed}
+.fld{display:flex;flex-direction:column;gap:7px;min-width:0;margin-bottom:14px}
+.hintk{font-size:12.5px;color:var(--muted-2);margin-top:2px}
+.sbox{display:flex;flex-direction:column;gap:18px}
+.sbox .card{margin:0}
+.sbox .card-h h3{display:flex;align-items:center;gap:10px}
+.sbox .card-h h3 .chip{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--lav);color:var(--violet)}
+.acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
+.acts .grow{flex:1}
+.acts .dirty{font-size:13px;color:var(--accent-ink);font-weight:600}
+.sec-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sec-r .tin{flex:1 1 220px;width:auto}
+.rule{padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--raise-mut);margin-bottom:12px}
+.rule-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.rule-h b{flex:1;font-size:15px}
+.ib2{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--fill);color:var(--text-2);transition:background .2s,color .2s}
+.ib2:hover:not(:disabled){background:var(--lav);color:var(--accent-ink)}
+.ib2:disabled{opacity:.35;cursor:default}
+.ib2.danger:hover:not(:disabled){background:var(--down-bg);color:var(--down)}
+.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.g5 .fld,.grid2 .fld,.g3 .fld{margin-bottom:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;margin-bottom:14px}
+.g3{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.bn{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:13px 16px;border-radius:18px;font-size:14px;line-height:1.45;background:var(--lav)}
+.bn svg{margin-top:1px;color:var(--violet)}
+.bn code{font-size:13px;background:var(--card);padding:1px 6px;border-radius:6px}
+.bn.ok{background:var(--up-bg)}.bn.ok svg{color:var(--up)}
+.bn.err{background:var(--down-bg)}.bn.err svg{color:var(--down)}
+.bn+.bn{margin-top:-8px}
+.ck-list{display:flex;flex-direction:column;gap:6px}
+.logo-prev{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.logo-box{width:84px;height:84px;border-radius:20px;border:1px dashed var(--line-3);display:grid;place-items:center;background:var(--fill);flex:none}
+.logo-box .logo-img{max-width:72px;max-height:72px}
+label.ghostbtn{cursor:pointer}
+label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
+.sy-card .sy-row{margin-top:16px}
+.sy-card .sy-bar{margin-bottom:6px}
+.sy-card.ok .sy-bar i{background:var(--up)}.sy-card.ok .sy-pct{color:var(--up)}
+.sy-card.ok .sy-bar i::after,.sy-card.err .sy-bar i::after{display:none}
+.sy-card.err .sy-bar i{background:var(--down)}.sy-card.err .sy-row b,.sy-card.err .sy-pct{color:var(--down)}
+
+/* каналы: таблица */
+.tscroll{overflow-x:auto}
+.t3in{min-width:740px}
+.t3in .thead,.t3in .tr{grid-template-columns:minmax(170px,2fr) repeat(7,minmax(66px,1fr));gap:6px;padding:0 14px;display:grid;align-items:center}
+.t3in .tr{min-height:60px;font-size:14px;cursor:default;animation:none}
+.t3in .tr.has{cursor:pointer}
+.t3in .tr.sub{background:var(--hover-row);min-height:52px}
+.t3in .r{text-align:right;white-space:nowrap}
+.t3in .dim{color:var(--muted-2)}
+.t3in .cr{gap:8px}
+.t3in .cr .nm{min-width:0}
+.chv{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:var(--fill);color:var(--text-3);flex:none;transition:transform .25s var(--ease),background .2s}
+.chv svg{width:15px;height:15px}
+.chv.ph{background:none}
+.tr[aria-expanded="true"] .chv{transform:rotate(90deg);background:var(--lav);color:var(--accent-ink)}
+.cr{display:flex;align-items:center;min-width:0}
+.cr .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cr small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;white-space:nowrap}
+.cr>span:last-child{min-width:0}
+.sub .cr .nm{font-weight:400}
+
+/* заявки: список */
+.lt-h,.lr{display:grid;grid-template-columns:112px minmax(110px,1fr) minmax(150px,1.6fr) minmax(110px,1fr) 104px 100px 84px;align-items:center;gap:10px;padding:0 18px}
+.lr{position:relative;min-height:62px;font-size:14px;animation:rise .45s var(--ease) both}
+.lr>span{min-width:0}
+.lr .ut{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.lr .ch{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.lr .dtc{color:var(--text-2);white-space:nowrap}
+.lr .r{text-align:right;justify-self:end}
+.lr .amt{font-weight:600}
+.lr .amt.dim{font-weight:400;color:var(--muted-2)}
+.lr .mut,.lt-h .mut{color:var(--muted-2)}
+.amo{position:relative;z-index:2;flex:none;display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;padding:0 9px 0 7px;border-radius:8px;
+  background:var(--fill);color:var(--text-2);font-size:12px;font-weight:600;text-decoration:none;box-shadow:inset 0 0 0 1px var(--line-2);transition:background .2s,color .2s,box-shadow .2s;white-space:nowrap}
+.amo:hover{background:var(--lav);color:var(--accent-ink);box-shadow:inset 0 0 0 1px var(--lilac)}
+.amo svg{width:13px;height:13px;stroke-width:2.2}
+.lr:focus-visible{outline-offset:-2px}
+.dw-lead h3{margin:6px 0 4px;font-size:24px;letter-spacing:-.02em}
+.dw-lead h4{margin:24px 0 10px;font-size:13px}
+.dw-lead .dw-h{margin-bottom:8px}
+.drawer .kv{margin-top:6px}
+.tbar>.dd{min-width:0}
+
+/* адаптив */
+@media (max-width:1280px){ .kpis{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:1100px){ .app{grid-template-columns:68px 0 minmax(0,1fr)} .side{opacity:0;pointer-events:none;visibility:hidden} #expand{display:none} .top-n{display:flex} .g5{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.mnav{display:none}
+@media (max-width:760px){
+  .app{margin:0;border-radius:0;grid-template-columns:1fr;padding:8px}.rail{display:none}.side{display:none}
+  .main{padding:16px 16px 96px}.kpis{grid-template-columns:1fr}
+  .mnav{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:20;padding:6px;border-radius:22px;background:var(--dock);backdrop-filter:blur(14px);box-shadow:0 18px 40px -14px rgba(0,0,0,.5);border:1px solid var(--side-line)}
+  .mnav button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;border-radius:16px;font-size:11px;color:#BDBDBD;transition:background .25s,color .25s}
+  .mnav button.on{background:linear-gradient(135deg,var(--violet-2),var(--violet));color:#fff}
+  .toast{bottom:96px}
+  .crumbs{gap:8px;margin-top:14px}
+  .crumbs #crClient,.crumbs .sl{display:none}
+  .crumbs .grow{display:none}
+  .seg{flex:1}.seg button{flex:1;padding:8px 6px;white-space:nowrap}
+  .crumbs .btn-v{padding:11px 13px}.crumbs .btn-v .t{display:none}
+  .upd{flex-basis:100%}
+  .sh{flex-direction:column;align-items:flex-start;gap:4px}
+  .k{min-height:0}.k .val{font-size:26px}
+  .tbar .tabs{overflow-x:auto;max-width:100%;scrollbar-width:none}
+  .tabs button{white-space:nowrap}
+  .tbar>.dd{flex:1 1 calc(50% - 6px)}.dd-btn{width:100%}.dd-btn .lbl{display:none}.dd-btn .cur{flex:1;max-width:none;text-align:left}
+  .dd-menu{max-width:calc(100vw - 48px)}.dd-opt{white-space:normal}
+  .chart{min-height:240px}
+  .card{padding:18px 16px}
+  .kv{grid-template-columns:110px 1fr}
+  .per{flex:1}.per .seg{width:100%}
+  .pmenu{min-width:190px}
+  .cal{left:0;right:auto;width:calc(100vw - 48px);padding:14px 14px 12px;transform-origin:top center}
+  .cal-f{flex-wrap:wrap}.cal-f .sel{flex:1 0 100%}.cal-f .ghostbtn,.cal-f .btn-v{flex:1;justify-content:center}
+  .cal-m{width:100%}.cal-g{grid-template-columns:repeat(7,1fr)}.cal-g .d span{width:38px;height:38px}
+  .pf-menu{width:min(328px,calc(100vw - 32px))}
+  .ava{width:38px;height:38px;font-size:13px}
+  .tin,.sel{font-size:16px}
+  .login{padding-top:5vh}
+  .lt-h{display:none}
+  .lr{grid-template-columns:1fr auto;grid-template-areas:"dt crm" "ch am" "ut ut" "st sb";gap:6px 10px;padding:12px 14px}
+  .lr>:nth-child(1){grid-area:dt}.lr>:nth-child(2){grid-area:ch}.lr>:nth-child(3){grid-area:ut}.lr>:nth-child(4){grid-area:st}.lr>:nth-child(5){grid-area:sb}.lr>:nth-child(6){grid-area:am}.lr>:nth-child(7){grid-area:crm;justify-self:end}
+  .g5,.grid2,.g3{grid-template-columns:1fr}
+  .logo-prev{flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rise{opacity:1;transform:none}}
+.static *,.static *::before,.static *::after{animation:none!important;transition:none!important}.static .rise{opacity:1;transform:none}
+
+.hintk.err{color:var(--down)}
+.tin[aria-invalid="true"],.sel[aria-invalid="true"]{border-color:var(--down)}
+.fl{font-size:13px;color:var(--muted)}
+.bn.warn{background:var(--lav)}
+.t3in .thead .r{white-space:normal;line-height:1.2;font-size:11.5px}
+/* первая колонка закреплена при горизонтальной прокрутке: фон как у строки, в обеих темах */
+.t3in .thead>:first-child,.t3in .tr>:first-child{position:sticky;left:0;z-index:1;align-self:stretch;display:flex;align-items:center;margin-left:-14px;padding-left:14px;background:var(--card)}
+.t3in .thead>:first-child{background:var(--pane-2)}
+.t3in .tr.sub>:first-child,.t3in .tr:hover>:first-child{background:var(--hover-row)}
+@media (max-width:760px){
+  .t3in{min-width:100%;width:max-content}
+  .t3in .thead,.t3in .tr{grid-template-columns:150px repeat(7,96px)}
+  .t3in .thead>:first-child,.t3in .tr>:first-child{box-shadow:8px 0 8px -8px rgba(0,0,0,.25)}
+}
+
+.lg-id{margin:-12px 0 18px;text-align:center}.lg-id .hintk{color:var(--muted);margin-top:2px}
+.rule.bad{border-color:var(--down);background:var(--down-bg)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F78D66"/><stop offset="1" stop-color="#F46430"/></linearGradient>
+    <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#F57040"/><rect width="2.4" height="6" fill="#F9AA8D"/></pattern>
+  </defs>
+</svg>
+
+<!-- вход -->
+<div class="login" id="login" hidden>
+  <div class="brand"><span id="lgLogo"></span><span id="lgName">UTM Аналитика</span></div>
+  <div class="lg-id" id="lgId" hidden><div class="hintk" id="lgIdTail"></div><div class="hintk">Сверь окончание с ссылкой, которую дал владелец</div></div>
+  <div class="card" id="lgNoCode" hidden>
+    <h1>Нет кода дашборда</h1>
+    <p class="sub-p" style="margin-bottom:0">В ссылке нет кода дашборда. Открой ссылку целиком, как её прислали: она кончается на #…</p>
+  </div>
+  <form class="card" id="lgForm" novalidate>
+    <h1>Вход</h1>
+    <p class="sub-p">Введи пароль, который тебе выдали.</p>
+    <div class="fld"><label class="fl" for="lgPass">Пароль</label><input class="tin" id="lgPass" type="password" autocomplete="current-password" required></div>
+    <div class="msg" id="lgHint" hidden></div>
+    <button class="btn-v full" type="submit" id="lgBtn">Войти</button>
+    <div class="msg err" id="lgMsg" role="alert" hidden></div>
+  </form>
+</div>
+
+<div class="app" id="app" hidden>
+  <!-- рейка -->
+  <nav class="rail" aria-label="Разделы">
+    <div class="logo" id="railLogo" aria-hidden="true"></div>
+    <div class="sep"></div>
+    <button class="rb on" data-view="overview" title="Обзор" aria-label="Обзор" data-ico="grid"></button>
+    <button class="rb" data-view="channels" title="Каналы" aria-label="Каналы" data-ico="funnel"></button>
+    <button class="rb" data-view="leads" title="Заявки" aria-label="Заявки" data-ico="list"></button>
+    <button class="rb" data-view="settings" data-admin title="Настройки" aria-label="Настройки" data-ico="sliders" hidden></button>
+    <div class="grow"></div>
+    <button class="rb" id="expand" title="Развернуть меню" aria-label="Развернуть меню" data-ico="panel" style="background:transparent;box-shadow:none"></button>
+  </nav>
+
+  <!-- тёмная панель -->
+  <aside class="side" aria-label="Навигация">
+    <div class="side-h">
+      <button class="circ" id="collapse" title="Свернуть меню" aria-label="Свернуть меню" data-ico="chevl"></button>
+      <h1 id="sideName">UTM Аналитика</h1>
+    </div>
+    <button class="nv on" data-view="overview"><span data-ico="grid"></span><span>Обзор</span></button>
+    <button class="nv" data-view="channels"><span data-ico="funnel"></span><span>Каналы</span></button>
+    <button class="nv" data-view="leads"><span data-ico="list"></span><span>Заявки</span><b class="badge" id="nvLeads">—</b></button>
+    <button class="nv" data-view="settings" data-admin hidden><span data-ico="sliders"></span><span>Настройки</span></button>
+    <div class="grow"></div>
+    <div class="side-foot"><span data-ico="clock"></span><span id="sideSync">Данные ещё не загружены</span></div>
+  </aside>
+
+  <!-- рабочая зона -->
+  <main class="main">
+    <div class="top">
+      <div class="top-n"><span id="topLogo"></span><b id="topName">UTM Аналитика</b></div>
+      <div class="grow"></div>
+      <div class="prof" id="prof">
+        <button type="button" class="ava" id="ava" aria-haspopup="dialog" aria-expanded="false" aria-controls="pfMenu" aria-label="Профиль и тема">—</button>
+        <div class="pf-menu" id="pfMenu" role="dialog" aria-label="Профиль и тема">
+          <div class="pf-h"><span class="ava" aria-hidden="true" id="pfAva">—</span><span class="pf-who"><b id="pfName">—</b><small id="pfMail"></small></span><span class="pf-role" id="pfRole"></span></div>
+          <div class="pf-sec"><div class="pf-l" id="thLbl">Тема</div>
+            <div class="th-g" role="group" aria-labelledby="thLbl" id="thSeg">
+              <button type="button" class="thm" data-t="light" aria-pressed="false"><span class="th-pv" aria-hidden="true"></span>Светлая</button>
+              <button type="button" class="thm" data-t="dark" aria-pressed="false"><span class="th-pv d" aria-hidden="true"></span>Тёмная</button>
+              <button type="button" class="thm" data-t="system" aria-pressed="false"><span class="th-pv s" aria-hidden="true"></span>Как в системе</button>
+            </div>
+          </div>
+          <div class="pf-sep"></div>
+          <button type="button" class="pf-it" id="pfOut"><span data-ico="logout"></span>Выйти</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="crumbs">
+      <span class="c" id="crClient">Клиент</span><span class="sl">/</span>
+      <span class="c"><b id="crView">Обзор</b></span><span class="sl" data-per>/</span>
+      <span class="pill-n" id="crRange" data-per>—</span><span class="upd" id="updAt"></span>
+      <div class="grow"></div>
+      <div class="per" id="per" data-per></div>
+      <button class="btn-v" id="refresh" aria-label="Обновить данные" data-per><span data-ico="refresh"></span><span class="t">Обновить</span></button>
+    </div>
+
+    <div class="state" id="state" role="status" hidden></div>
+
+    <div class="content view" id="v-overview">
+      <div class="bn" id="unOv" hidden></div>
+      <section id="kpi">
+        <div class="sh"><h2>Главное за период</h2><span class="hint" id="prevHint"></span></div>
+        <div class="kpis" id="kpis"></div>
+      </section>
+      <section class="card rise" style="animation-delay:.25s">
+        <div class="card-h">
+          <h3>Динамика</h3>
+          <div class="tabs" role="tablist" id="ctabs">
+            <span class="knob"></span>
+            <button role="tab" aria-selected="true" data-m="money"><span class="ck" data-ico="check"></span>Выручка и расход</button>
+            <button role="tab" aria-selected="false" data-m="leads"><span class="ck" data-ico="check"></span>Заявки</button>
+            <button role="tab" aria-selected="false" data-m="sales"><span class="ck" data-ico="check"></span>Продажи</button>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <div class="chart" id="chart" tabindex="0" aria-label="График по дням. Стрелки влево и вправо — переход по дням."><div class="tt" id="tt"></div></div>
+      </section>
+    </div>
+
+    <div class="content view" id="v-channels" hidden>
+      <section>
+        <div class="sh"><h2>Каналы</h2><span class="hint">нажми на строку, чтобы раскрыть метки: source → medium → campaign → content → term</span></div>
+        <div class="bn" id="unCh" hidden></div>
+        <div class="tbl tscroll" role="treegrid" aria-label="Каналы">
+          <div class="t3in">
+            <div class="thead" role="row"><span>Канал</span><span class="r">Расход</span><span class="r">Заявки</span><span class="r">Квалы</span><span class="r">Продажи</span><span class="r">Выручка</span><span class="r">Цена заявки</span><span class="r">ROMI</span></div>
+            <div id="chRows"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="content view" id="v-leads" hidden>
+      <section>
+        <div class="sh"><h2>Заявки</h2><span class="hint" id="leadsHint"></span></div>
+        <div class="tbar"><div id="ddCh"></div><div id="ddSt"></div></div>
+        <div id="leadsBox"></div>
+      </section>
+    </div>
+
+    <div class="content view" id="v-settings" hidden>
+      <section>
+        <div class="sh"><h2>Настройки</h2><span class="hint">меняются только здесь, таблицу руками править не нужно</span></div>
+        <div class="tbar">
+          <div class="tabs" role="tablist" id="stabs" aria-label="Разделы настроек">
+            <span class="knob"></span>
+            <button role="tab" aria-selected="true" data-s="conn"><span class="ck" data-ico="check"></span>Подключения</button>
+            <button role="tab" aria-selected="false" data-s="qual"><span class="ck" data-ico="check"></span>Квалификация и продажа</button>
+            <button role="tab" aria-selected="false" data-s="chan"><span class="ck" data-ico="check"></span>Каналы</button>
+            <button role="tab" aria-selected="false" data-s="spend"><span class="ck" data-ico="check"></span>Ручной расход</button>
+            <button role="tab" aria-selected="false" data-s="acc"><span class="ck" data-ico="check"></span>Доступ</button>
+            <button role="tab" aria-selected="false" data-s="look"><span class="ck" data-ico="check"></span>Оформление</button>
+            <button role="tab" aria-selected="false" data-s="sync"><span class="ck" data-ico="check"></span>Синк</button>
+          </div>
+        </div>
+        <div id="sBox" class="sbox"></div>
+      </section>
+    </div>
+  </main>
+</div>
+<nav class="mnav" id="mnav" aria-label="Разделы" hidden>
+  <button data-view="overview"><span data-ico="grid"></span>Обзор</button>
+  <button data-view="channels"><span data-ico="funnel"></span>Каналы</button>
+  <button data-view="leads"><span data-ico="list"></span>Заявки</button>
+  <button data-view="settings" data-admin hidden><span data-ico="sliders"></span>Настройки</button>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Заявка" aria-hidden="true"><div id="drawerBody"></div></aside>
+
+<script>
+(function () {
+  'use strict';
+  var STATIC = /[?&]static=1/.test(location.search);
+  if (STATIC) document.documentElement.classList.add('static');
+  var DAY = 864e5;
+  var MOBILE = matchMedia('(max-width:760px)');
+  var $ = function (id) { return document.getElementById(id); };
+  // ---------- иконки (контуры в стиле lucide) ----------
+  var P = {
+    grid:'<rect x="3" y="3" width="7" height="7" rx="1.8"/><rect x="14" y="3" width="7" height="7" rx="1.8"/><rect x="3" y="14" width="7" height="7" rx="1.8"/><rect x="14" y="14" width="7" height="7" rx="1.8"/>',
+    kanban:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 7v7M12 7v4M16 7v9"/>',
+    image:'<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/>',
+    folder:'<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.6 3.9A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/>',
+    funnel:'<path d="M3 4h18l-7 8.5V19l-4 2v-8.5z"/>',
+    panel:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 3v18"/>',
+    chevl:'<path d="m11 17-5-5 5-5M18 17l-5-5 5-5"/>',
+    chevu:'<path d="m18 15-6-6-6 6"/>', chevd:'<path d="m6 9 6 6 6-6"/>', chevr:'<path d="m9 18 6-6-6-6"/>', chevlt:'<path d="m15 18-6-6 6-6"/>',
+    search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    sparkles:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
+    trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+    info:'<circle cx="12" cy="12" r="9.5"/><path d="M12 16v-4M12 8h.01"/>',
+    refresh:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+    check:'<path d="M20 6 9 17l-5-5"/>',
+    wallet:'<path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v3"/><path d="M3 6v12a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-3"/><path d="M17 12h4v4h-4a2 2 0 0 1 0-4z"/>',
+    coins:'<circle cx="8" cy="8" r="6"/><path d="M18.1 10.4A6 6 0 1 1 10.3 18"/><path d="M7 6h1v4M16.7 13.9l.7.7-2.8 2.8"/>',
+    cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 2h3l2.7 12.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>',
+    rocket:'<path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="m12 15-3-3a22 22 0 0 1 2-4A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/>',
+    mega:'<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    percent:'<path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+    tag:'<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".6"/>',
+    chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+    globe:'<circle cx="12" cy="12" r="9.5"/><path d="M12 2.5a14 14 0 0 0 0 19 14 14 0 0 0 0-19M2.5 12h19"/>',
+    clock:'<circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/>',
+    sliders:'<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    trash:'<path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+    cal:'<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1z"/><path d="M15 8h-4.5a1.75 1.75 0 0 0 0 3.5h3a1.75 1.75 0 0 1 0 3.5H9M12 6.5v11"/>',
+    ucheck:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
+    chatok:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+    ban:'<circle cx="12" cy="12" r="9.5"/><path d="m5.3 5.3 13.4 13.4"/>',
+    key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M17 6l3 3M14.5 8.5l2 2"/>',
+    logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+    eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    eyeoff:'<path d="M9.9 4.2A10.4 10.4 0 0 1 12 4c6.4 0 10 8 10 8a17.6 17.6 0 0 1-2.2 3.2M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6M2 2l20 20M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+    alert:'<circle cx="12" cy="12" r="9.5"/><path d="M12 7.5v5M12 16h.01"/>',
+    arrow:'<path d="M7 17 17 7M7 7h10v10"/>', list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>', pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>'
+  };
+  function ico(n, cls) { return '<svg class="i ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (P[n] || '') + '</svg>'; }
+  function paintIcons(root) {
+    root.querySelectorAll('[data-ico]').forEach(function (el) { if (!el.dataset.done) { el.insertAdjacentHTML('afterbegin', ico(el.dataset.ico)); el.dataset.done = 1; } });
+  }
+  paintIcons(document);
+  // ---------- форматирование (из донора) ----------
+  var nf = new Intl.NumberFormat('ru-RU');
+  var nf2 = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function fx2(v) { return nf2.format(v); } // деньги и дробные метрики — всегда два знака: 1 339 576,00 · 3,07 · 1,40
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var CUR = 'KZT';
+  function usd() { return CUR === 'USD'; }
+  function conv(v) { return v; } // суммы уже в валюте отчёта
+  function fmtMoney(v) { return v == null ? '—' : usd() ? '$\u202F' + fx2(v) : nf.format(Math.round(v)) + '\u00A0₸'; } // v — уже в выбранной валюте; ₸ — до целых, $ — с центами; ₸ не отрывается от числа
+  function compact(v) {
+    if (v == null) return '—';
+    var a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toLocaleString('ru-RU', { maximumFractionDigits: 2 }) + ' млн';
+    if (a >= 1e3) return Math.round(v / 1e3).toLocaleString('ru-RU') + ' тыс';
+    return nf.format(Math.round(v));
+  }
+  function pct(v, signed) { if (v == null) return '—'; return (signed && v > 0 ? '+' : '') + fx2(v) + '\u00A0%'; }
+  function day(s, long) { var d = new Date(s + 'T00:00:00'); return d.toLocaleDateString('ru-RU', long ? { day: 'numeric', month: 'long' } : { day: 'numeric', month: 'short' }).replace('.', ''); }
+  function dt(isoStr) { var d = isoStr ? new Date(isoStr) : null; return d && !isNaN(d) ? d.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') : '—'; }
+  function change(cur, prev) { return cur == null || !prev ? null : (cur - prev) / Math.abs(prev) * 100; }
+  function deltaPill(d, inverse) {
+    if (d == null) return '';
+    var good = inverse ? d < 0 : d >= 0;
+    return '<span class="dl ' + (good ? 'up' : 'down') + '" title="К прошлому периоду">' + (d >= 0 ? '↑' : '↓') + ' ' + fx2(Math.abs(d)) + '\u00A0%</span>';
+  }
+  function pl(n, f) { var m = n % 10, h = n % 100; return f[m === 1 && h !== 11 ? 0 : m >= 2 && m <= 4 && (h < 12 || h > 14) ? 1 : 2]; }
+  function iso(d) { function z(n) { return (n < 10 ? '0' : '') + n; } return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); } // локальная дата, не UTC
+  function pDate(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(d, n) { var x = new Date(d); x.setDate(x.getDate() + n); return x; }
+  function spanDays(from, to) { return Math.round((pDate(to) - pDate(from)) / DAY) + 1; }
+  // период: последние N дней или свой диапазон { from, to }
+  function rangeOf(p) {
+    if (p.from) return { from: p.from, to: p.to };
+    var to = new Date(); return { from: iso(addDays(to, -p.days + 1)), to: iso(to) };
+  }
+  function ppPill(cur, prev, inverse) {
+    if (cur == null || prev == null) return '';
+    var d = Math.round((cur - prev) * 100) / 100;
+    return '<span class="dl ' + ((inverse ? d <= 0 : d >= 0) ? 'up' : 'down') + '" title="К прошлому периоду, в процентных пунктах">' + (d >= 0 ? '↑' : '↓') + ' ' + fx2(Math.abs(d)) + '\u00A0п.п.</span>';
+  }
+  function countUp(el, to, fmt, ms) {
+    if (to == null) { el.textContent = '—'; return; }
+    if (STATIC || matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = fmt(to); return; }
+    var t0 = performance.now();
+    (function step(t) {
+      var k = Math.min(1, (t - t0) / (ms || 1100)); var e = 1 - Math.pow(1 - k, 3);
+      el.textContent = k < 1 ? fmt(to * e) : fmt(to);
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* песочница — не сохраняем */ } }
+  // Вне Apps Script (статическая страница) адрес один на всех клиентов: ключи привязаны к коду дашборда из #, токены разных дашбордов не смешиваются
+  function hasGas() { return !!(window.google && window.google.script && window.google.script.run); }
+  function pageId() { var h = location.hash.replace(/^#/, ''); return /^[A-Za-z0-9_-]{20,120}$/.test(h) ? h : ''; }
+  function skey(k) { return hasGas() ? k : k + ':' + pageId(); }
+  function ssGet(k) { try { return sessionStorage.getItem(skey(k)); } catch (e) { return null; } }
+  function ssSet(k, v) { try { if (v == null) sessionStorage.removeItem(skey(k)); else sessionStorage.setItem(skey(k), v); } catch (e) { /* песочница */ } }
+  function sf(v, d) { return v == null || v === '' ? (d == null ? '—' : d) : v; }
+  function nf0(v) { return v == null ? '—' : nf.format(Math.round(v)); }
+  function safeUrl(u) { return /^https:\/\/[^\s"'<>]+$/i.test(String(u || '')) ? String(u) : ''; }
+  function lbl(v) { return v === '' || v == null ? '(пусто)' : String(v); }
+
+  // ---------- состояние ----------
+  var S = { token: '', role: '', view: 'overview', per: { days: 30 }, data: null, metric: 'money', active: -1, seq: 0,
+    open: {}, lf: { ch: 'all', st: 'all', n: 30 }, rows: [], set: null, edit: null, tab: 'conn', boot: null, empty: false };
+
+  // ---------- связь с Apps Script ----------
+  function ApiError(code, msg) { this.code = code; this.message = msg || code; }
+  var ERR = {
+    forbidden: 'Нет доступа. Войди заново.',
+    locked: 'Слишком много неверных попыток. Вход закрыт на 15 минут.',
+    bad_request: 'Сервер не принял данные. Проверь поля и попробуй ещё раз.',
+    server_error: 'Ошибка на сервере. Попробуй ещё раз; подробности — на листе Log в таблице.',
+    too_soon: 'Синк запускали меньше 10 минут назад. Подожди и нажми ещё раз.',
+    busy: 'Сейчас идёт синк, таблица занята. Подожди минуту и повтори.',
+    sync_failed: 'Синк не удался: Meta или CRM не ответили. Подробности — на листе Log в таблице.',
+    network: 'Нет связи с Google. Проверь интернет и повтори.'
+  };
+  function errText(e) { return (e && e.code && ERR[e.code]) || (e && e.code ? 'Ошибка: ' + e.code : ERR.network); }
+  // Два транспорта: google.script.run (внутри Apps Script) или fetch на /exec (статическая страница, код дашборда в #)
+  function viaFetch(name, args) {
+    var id = pageId();
+    if (!id) return Promise.reject(new Error('no id'));
+    return fetch('https://script.google.com/macros/s/' + id + '/exec', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: name, args: args }),
+      credentials: 'omit', redirect: 'follow', cache: 'no-store', referrerPolicy: 'no-referrer' })
+      .then(function (r) { if (r.status !== 200) throw new Error('http ' + r.status); return r.text(); })
+      .then(function (t) { try { return JSON.parse(t); } catch (e) { throw new Error('not json'); } });
+  }
+  function call(name) {
+    var args = [].slice.call(arguments, 1);
+    return new Promise(function (ok, fail) {
+      function done(r) {
+        if (r && r.ok === false) {
+          if (r.error === 'forbidden' && name !== 'apiLogin' && S.token) toLogin('Сессия закончилась. Войди снова.');
+          fail(new ApiError(r.error)); return;
+        }
+        ok(r || {});
+      }
+      function broken(e) { fail(new ApiError('network', e && e.message)); }
+      if (!hasGas()) { viaFetch(name, args).then(done, broken); return; }
+      var run = google.script.run.withSuccessHandler(done).withFailureHandler(broken);
+      run[name].apply(run, args);
+    });
+  }
+  function callT(name) { var a = [].slice.call(arguments); a.splice(1, 0, S.token); return call.apply(null, a); }
+
+  // ---------- логотип и название ----------
+  function setLogo(el, logo, size) {
+    el.textContent = '';
+    if (typeof logo === 'string' && /^data:image\/(png|jpeg|webp);base64,/i.test(logo)) {
+      var img = document.createElement('img');
+      img.className = 'logo-img'; img.alt = ''; img.width = img.height = size; img.src = logo;
+      el.appendChild(img);
+    } else {
+      var m = document.createElement('span'); m.className = 'mark'; m.style.width = m.style.height = size + 'px'; m.innerHTML = ico('trend');
+      el.appendChild(m);
+    }
+  }
+  var BRAND = { name: 'UTM Аналитика', logo: '' };
+  function paintBrand() {
+    $('lgName').textContent = $('sideName').textContent = $('topName').textContent = $('crClient').textContent = BRAND.name;
+    setLogo($('lgLogo'), BRAND.logo, 40); setLogo($('railLogo'), BRAND.logo, 38); setLogo($('topLogo'), BRAND.logo, 34);
+    var t = initialsOf(BRAND.name); $('ava').textContent = $('pfAva').textContent = t;
+    $('pfName').textContent = BRAND.name;
+  }
+  function initialsOf(s) {
+    return String(s || '').replace(/@.*$/, '').replace(/[«»"()]/g, '').split(/[\s._-]+/).filter(Boolean).slice(0, 2).map(function (w) { return w[0]; }).join('').toUpperCase() || '—';
+  }
+
+  // ---------- тема ----------
+  var THEME = document.documentElement.getAttribute('data-theme') || 'light';
+  function syncTheme() { document.querySelectorAll('#thSeg .thm').forEach(function (x) { x.setAttribute('aria-pressed', x.dataset.t === THEME); }); }
+  function applyTheme(t) {
+    var root = document.documentElement;
+    if (root.getAttribute('data-theme') === t) return;
+    var run = function () { root.setAttribute('data-theme', t); };
+    if (!STATIC && document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) document.startViewTransition(run); // мягкая смена, без мигания
+    else run();
+  }
+  $('thSeg').addEventListener('click', function (e) {
+    var b = e.target.closest('.thm'); if (!b) return;
+    THEME = b.dataset.t; lsSet('prefs:v1', JSON.stringify({ theme: THEME })); syncTheme(); applyTheme(THEME);
+  });
+  syncTheme();
+
+  // ---------- профиль ----------
+  var ava = $('ava'), pfMenu = $('pfMenu');
+  function pfOpen() { return pfMenu.classList.contains('on'); }
+  function openPf() { if (closeOpenDd) closeOpenDd(); PER.close(); pfMenu.classList.add('on'); ava.setAttribute('aria-expanded', 'true'); setTimeout(function () { var b = pfMenu.querySelector('.thm[aria-pressed="true"]'); if (b) b.focus(); }, 40); }
+  function closePf(focus) { if (!pfOpen()) return; pfMenu.classList.remove('on'); ava.setAttribute('aria-expanded', 'false'); if (focus) ava.focus(); }
+  ava.addEventListener('click', function () { if (pfOpen()) closePf(); else openPf(); });
+  document.addEventListener('pointerdown', function (e) { if (pfOpen() && !e.target.closest('#prof')) closePf(); });
+  pfMenu.addEventListener('focusout', function (e) { if (pfOpen() && e.relatedTarget && !e.relatedTarget.closest('#prof')) closePf(); });
+  $('pfOut').addEventListener('click', function () { closePf(); toLogin(''); });
+
+  // ---------- вкладки, тосты, период, выпадающие списки (из донора) ----------
+  function knobEl(g, sel) {
+    var b = g && g.querySelector(sel), k = g && g.querySelector('.knob');
+    if (!b || !k || !b.offsetWidth) return;
+    k.style.left = b.offsetLeft + 'px'; k.style.width = b.offsetWidth + 'px';
+  }
+  function knob(group, btnSel) { knobEl(document.getElementById(group), btnSel); }
+  function tabs(id, attr, onPick) {
+    var g = document.getElementById(id);
+    g.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      g.querySelectorAll('button').forEach(function (x) { x.setAttribute(attr, x === b); });
+      knob(id, '[' + attr + '="true"]'); onPick(b);
+    });
+    knob(id, '[' + attr + '="true"]');
+  }
+  function toast(t, ms) { var el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(function () { el.classList.remove('on'); }, ms || 2200); }
+  var MONTHS = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  function today0() { var t = new Date(); t.setHours(0, 0, 0, 0); return t; }
+  function monthAdd(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+  function periodPicker(host, o) {
+    var val = o.value, CAL = { a: null, b: null, hover: null, view: null };
+    host.classList.add('per');
+    host.innerHTML = '<div class="seg" role="group" aria-label="Период"><span class="knob"></span>' +
+      '<button type="button" data-days="7" aria-pressed="false">7 дней</button><button type="button" data-days="30" aria-pressed="false">30 дней</button>' +
+      '<button type="button" data-more aria-pressed="false" aria-haspopup="menu" aria-expanded="false" aria-label="Другой период"><span class="pm-t"></span><span class="pm-c">' + ico('chevd') + '</span></button></div>' +
+      '<div class="pmenu" role="menu" aria-label="Другой период">' +
+      '<button type="button" role="menuitemradio" data-days="60">60 дней</button><button type="button" role="menuitemradio" data-days="90">90 дней</button>' +
+      '<button type="button" role="menuitem" data-cal>' + ico('cal') + 'Свой период…</button></div>' +
+      '<div class="cal" role="dialog" aria-label="Свой период"></div>';
+    var segEl = host.querySelector('.seg'), pmenu = host.querySelector('.pmenu'), moreBtn = host.querySelector('[data-more]'), calEl = host.querySelector('.cal'), pmT = host.querySelector('.pm-t');
+    var minDate = o.minDate || addDays(today0(), -365);
+    function nMonths() { return MOBILE.matches ? 1 : 2; }
+
+    function sync() {
+      var std = !val.from && (val.days === 7 || val.days === 30);
+      segEl.querySelectorAll('button[data-days]').forEach(function (x) { x.setAttribute('aria-pressed', std && +x.dataset.days === val.days); });
+      moreBtn.setAttribute('aria-pressed', !std);
+      pmT.textContent = std ? '' : val.from ? day(val.from) + ' — ' + day(val.to) : val.days + ' дней';
+      moreBtn.setAttribute('aria-label', std ? 'Другой период' : 'Период: ' + pmT.textContent + '. Сменить');
+      pmenu.querySelectorAll('button[data-days]').forEach(function (x) { x.setAttribute('aria-checked', !val.from && +x.dataset.days === val.days); });
+      knobEl(segEl, '[aria-pressed="true"]');
+    }
+    function pick(v) { val = v; sync(); o.onChange(v); }
+    function menuOpen() { return pmenu.classList.contains('on'); }
+    function calOpen() { return calEl.classList.contains('on'); }
+    function openMenu() { closeCal(); pmenu.classList.add('on'); moreBtn.setAttribute('aria-expanded', 'true'); setTimeout(function () { (pmenu.querySelector('[aria-checked="true"]') || pmenu.querySelector('button')).focus(); }, 30); }
+    function closeMenu(focus) { if (!menuOpen()) return; pmenu.classList.remove('on'); moreBtn.setAttribute('aria-expanded', 'false'); if (focus) moreBtn.focus(); }
+    function openCal() {
+      var r = rangeOf(val);
+      CAL.a = pDate(r.from); CAL.b = pDate(r.to); CAL.hover = null;
+      if (CAL.a < minDate) CAL.a = minDate;
+      CAL.view = monthAdd(CAL.b, 0); // последний показанный месяц
+      renderCal(); calEl.classList.add('on'); moreBtn.setAttribute('aria-expanded', 'true');
+      setTimeout(function () { var f = calEl.querySelector('.d.e') || calEl.querySelector('.d:not(:disabled)'); if (f) f.focus(); }, 30);
+    }
+    function closeCal(focus) { if (!calOpen()) return; calEl.classList.remove('on'); moreBtn.setAttribute('aria-expanded', 'false'); if (focus) moreBtn.focus(); }
+    function quick() {
+      var t = today0(), m0 = new Date(t.getFullYear(), t.getMonth(), 1), pm = monthAdd(m0, -1);
+      return [{ k: 'this', t: 'Этот месяц', a: m0, b: t }, { k: 'last', t: 'Прошлый месяц', a: pm, b: addDays(m0, -1) }];
+    }
+    function renderCal() {
+      var t = today0(), n = nMonths(), first = monthAdd(CAL.view, -(n - 1));
+      var html = '<div class="cal-q" role="group" aria-label="Быстрый выбор">' + quick().map(function (q) {
+        return '<button type="button" data-q="' + q.k + '" aria-pressed="false">' + q.t + '</button>';
+      }).join('') + '</div><div class="cal-ms">';
+      for (var m = 0; m < n; m++) {
+        var mo = monthAdd(first, m), off = (mo.getDay() + 6) % 7, dim = new Date(mo.getFullYear(), mo.getMonth() + 1, 0).getDate();
+        var prevOk = monthAdd(first, -1) >= monthAdd(minDate, 0), nextOk = monthAdd(CAL.view, 1) <= t;
+        html += '<div class="cal-m"><div class="cal-mh">' +
+          (m === 0 ? '<button type="button" class="cal-nav" data-nav="-1" aria-label="Предыдущий месяц"' + (prevOk ? '' : ' disabled') + '>' + ico('chevlt') + '</button>' : '<span class="cal-nav ph"></span>') +
+          '<span>' + MONTHS[mo.getMonth()] + ' ' + mo.getFullYear() + '</span>' +
+          (m === n - 1 ? '<button type="button" class="cal-nav" data-nav="1" aria-label="Следующий месяц"' + (nextOk ? '' : ' disabled') + '>' + ico('chevr') + '</button>' : '<span class="cal-nav ph"></span>') +
+          '</div><div class="cal-g" role="grid">' + ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(function (w) { return '<span class="wd">' + w + '</span>'; }).join('') +
+          new Array(off + 1).join('<span></span>');
+        for (var dd = 1; dd <= dim; dd++) {
+          var dte = new Date(mo.getFullYear(), mo.getMonth(), dd), dis = dte > t || dte < minDate;
+          html += '<button type="button" class="d' + (+dte === +t ? ' td' : '') + '" data-d="' + iso(dte) + '"' + (dis ? ' disabled' : '') + ' aria-label="' + dte.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) + '"><span>' + dd + '</span></button>';
+        }
+        html += '</div></div>';
+      }
+      html += '</div><div class="cal-f"><span class="sel"></span><button type="button" class="ghostbtn" data-act="cancel">Отмена</button><button type="button" class="btn-v sm" data-act="apply">Применить</button></div>';
+      calEl.innerHTML = html;
+      paintRange();
+    }
+    function paintRange() {
+      var a = CAL.a, b = CAL.b || CAL.hover, lo = a && b && b < a ? b : a, hi = a && b && b < a ? a : b;
+      calEl.querySelectorAll('.d').forEach(function (x) {
+        var d = +pDate(x.dataset.d);
+        x.classList.toggle('s', !!lo && d === +lo); x.classList.toggle('e', !!(hi || lo) && d === +(hi || lo));
+        x.classList.toggle('in', !!(lo && hi) && d > +lo && d < +hi);
+        x.setAttribute('aria-pressed', !!lo && d >= +lo && d <= +(hi || lo));
+      });
+      var sel = calEl.querySelector('.sel'), ap = calEl.querySelector('[data-act="apply"]');
+      if (CAL.a && CAL.b) { var n = Math.round((CAL.b - CAL.a) / DAY) + 1; sel.innerHTML = '<b>' + day(iso(CAL.a)) + ' — ' + day(iso(CAL.b)) + '</b> · ' + n + ' ' + pl(n, ['день', 'дня', 'дней']); }
+      else sel.textContent = 'Выберите конечную дату';
+      ap.disabled = !(CAL.a && CAL.b);
+      calEl.querySelectorAll('.cal-q button').forEach(function (x) {
+        var q = quick().filter(function (z) { return z.k === x.dataset.q; })[0];
+        x.setAttribute('aria-pressed', !!(CAL.a && CAL.b && +CAL.a === +q.a && +CAL.b === +q.b));
+      });
+    }
+
+    segEl.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b === moreBtn) { if (menuOpen() || calOpen()) { closeMenu(); closeCal(); } else openMenu(); return; }
+      closeMenu(); closeCal(); pick({ days: +b.dataset.days });
+    });
+    pmenu.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.hasAttribute('data-cal')) { closeMenu(); openCal(); return; }
+      closeMenu(true); pick({ days: +b.dataset.days });
+    });
+    pmenu.addEventListener('keydown', function (e) {
+      var it = [].slice.call(pmenu.querySelectorAll('button')), i = it.indexOf(document.activeElement);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); it[(i + (e.key === 'ArrowDown' ? 1 : -1) + it.length) % it.length].focus(); }
+      else if (e.key === 'Tab') closeMenu();
+    });
+    calEl.addEventListener('click', function (e) {
+      var d = e.target.closest('.d'), nav = e.target.closest('[data-nav]'), q = e.target.closest('[data-q]'), act = e.target.closest('[data-act]');
+      if (d && !d.disabled) {
+        var v = pDate(d.dataset.d);
+        if (!CAL.a || CAL.b) { CAL.a = v; CAL.b = null; } else if (v < CAL.a) { CAL.b = CAL.a; CAL.a = v; } else CAL.b = v;
+        CAL.hover = null; paintRange(); return;
+      }
+      if (nav && !nav.disabled) { CAL.view = monthAdd(CAL.view, +nav.dataset.nav); renderCal(); var nb = calEl.querySelector('[data-nav="' + nav.dataset.nav + '"]'); if (nb && !nb.disabled) nb.focus(); return; }
+      if (q) {
+        var z = quick().filter(function (x) { return x.k === q.dataset.q; })[0];
+        CAL.a = z.a < minDate ? minDate : z.a; CAL.b = z.b; CAL.view = monthAdd(z.b, 0); renderCal(); calEl.querySelector('[data-q="' + z.k + '"]').focus(); return;
+      }
+      if (act && act.dataset.act === 'cancel') { closeCal(true); return; }
+      if (act && act.dataset.act === 'apply' && CAL.a && CAL.b) { closeCal(true); pick({ from: iso(CAL.a), to: iso(CAL.b) }); }
+    });
+    calEl.addEventListener('mouseover', function (e) {
+      var d = e.target.closest('.d'); if (!d || d.disabled || !CAL.a || CAL.b) return;
+      var v = pDate(d.dataset.d); if (+v !== +CAL.hover) { CAL.hover = v; paintRange(); }
+    });
+    document.addEventListener('pointerdown', function (e) { if (!host.contains(e.target)) { closeMenu(); closeCal(); } });
+    var wasMob = MOBILE.matches;
+    sync();
+    return {
+      get: function () { return val; },
+      set: function (v) { val = v; sync(); },
+      close: function (focus) { var was = menuOpen() || calOpen(); if (calOpen()) closeCal(focus); else closeMenu(focus); return was; }, // true — было что закрывать (для Esc)
+      relayout: function () { knobEl(segEl, '[aria-pressed="true"]'); if (calOpen() && wasMob !== MOBILE.matches) renderCal(); wasMob = MOBILE.matches; }
+    };
+  }
+  var PER = periodPicker($('per'), {
+    value: S.per, minDate: addDays(today0(), -365),
+    onChange: function (v) { S.per = v; load().catch(function () {}); }
+  });
+  var closeOpenDd = null;
+  function dropdown(el, label, opts, cur, onPick) {
+    function idx(v) { for (var i = 0; i < opts.length; i++) if (opts[i].v === v) return i; return 0; }
+    el.className = 'dd';
+    el.innerHTML = '<button type="button" class="dd-btn" aria-haspopup="listbox" aria-expanded="false"><span class="lbl">' + esc(label) + '</span><span class="cur">' + esc(opts[idx(cur)].t) + '</span><span class="chev">' + ico('chevd') + '</span></button>' +
+      '<div class="dd-menu" role="listbox" aria-label="' + esc(label) + '">' + opts.map(function (o, i) {
+        return '<button type="button" class="dd-opt" role="option" tabindex="-1" aria-selected="' + (o.v === cur) + '"><span class="ck2">' + ico('check') + '</span>' + esc(o.t) + (o.sub != null ? '<span class="sub">' + esc(o.sub) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+    var btn = el.querySelector('.dd-btn'), items = [].slice.call(el.querySelectorAll('.dd-opt')), hl = 0;
+    function setHl(i, focus) { hl = (i + items.length) % items.length; items.forEach(function (x, j) { x.classList.toggle('hl', j === hl); }); if (focus) items[hl].focus(); }
+    function close(focusBtn) { el.classList.remove('open'); btn.setAttribute('aria-expanded', 'false'); if (closeOpenDd === close) closeOpenDd = null; if (focusBtn) btn.focus(); }
+    function open() { if (closeOpenDd) closeOpenDd(); el.classList.add('open'); btn.setAttribute('aria-expanded', 'true'); closeOpenDd = close; setHl(idx(cur), true); }
+    function mark(i) { cur = opts[i].v; el.querySelector('.cur').textContent = opts[i].t; items.forEach(function (x, j) { x.setAttribute('aria-selected', j === i); }); }
+    btn.onclick = function () { if (el.classList.contains('open')) close(); else open(); };
+    btn.onkeydown = function (e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); open(); } };
+    items.forEach(function (x, i) {
+      x.onclick = function () { mark(i); close(true); onPick(cur); };
+      x.onmouseenter = function () { setHl(i, false); };
+    });
+    el.querySelector('.dd-menu').onkeydown = function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setHl(hl + 1, true); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setHl(hl - 1, true); }
+      else if (e.key === 'Escape') { e.stopPropagation(); close(true); }
+      else if (e.key === 'Tab') close();
+    };
+    return { set: function (v) { mark(idx(v)); } };
+  }
+  document.addEventListener('click', function (e) { if (closeOpenDd && !e.target.closest('.dd.open')) closeOpenDd(); });
+
+  // ---------- график (из донора) ----------
+  var METRICS = {
+    money: { bars: 'revenue', line: 'spend', label: 'Выручка', lineLabel: 'Расход', fmt: fmtMoney, money: true },
+    leads: { bars: 'leads', label: 'Заявки', fmt: function (v) { return nf.format(v); } },
+    sales: { bars: 'sales', label: 'Продажи', fmt: function (v) { return nf.format(v); } }
+  };
+  function chartM() { return METRICS[S.metric]; }
+  function mv(x, key, m) { var v = x[key] || 0; return m.money ? conv(v) || 0 : v; } // суммы на графике — в выбранной валюте
+  function niceMax(v) { if (!v) return 1; var e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * e; }
+  // больше 45 дней — столбцы по неделям, иначе они слишком тонкие
+  function series() {
+    var d = S.data.daily, out = [];
+    if (d.length <= 45) return d.map(function (x) { return Object.assign({ to: x.date }, x); });
+    for (var i = d.length; i > 0; i -= 7) { // с конца: неполной будет самая старая неделя, а не текущая
+      var ch = d.slice(Math.max(0, i - 7), i), b = { date: ch[0].date, to: ch[ch.length - 1].date };
+      ['spend', 'conversations', 'leads', 'qualified', 'sales', 'revenue', 'impressions', 'clicks'].forEach(function (k) { b[k] = ch.reduce(function (a, x) { return a + (x[k] || 0); }, 0); });
+      out.unshift(b);
+    }
+    return out;
+  }
+  function renderChart(animate) {
+    var box = document.getElementById('chart'), m = chartM(), daily = series(), weekly = S.data.daily.length > 45;
+    S.active = -1; document.getElementById('tt').classList.remove('on'); // старая подсказка не висит на новом графике
+    document.getElementById('legend').innerHTML = '<span><i style="background:linear-gradient(#F78D66,#F46430)"></i>' + m.label + '</span>' + (m.line ? '<span><i style="background:var(--inv);height:2px;border-radius:2px;vertical-align:3px"></i>' + m.lineLabel + '</span>' : '') + (weekly ? '<span>по неделям</span>' : '');
+    var W = box.clientWidth, H = box.clientHeight, L = 54, R = 8, T = 14, B = 28, iw = W - L - R, ih = H - T - B, n = daily.length;
+    var max = niceMax(Math.max.apply(null, daily.map(function (x) { return Math.max(mv(x, m.bars, m), m.line ? mv(x, m.line, m) : 0); })));
+    if (S.metric !== 'money') max = Math.max(4, Math.ceil(max / 4) * 4);
+    var band = iw / n, bw = Math.max(3, Math.min(20, band * .58));
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">';
+    for (var t = 0; t <= 4; t++) {
+      var y = T + ih - ih * t / 4;
+      s += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/><text class="ax" x="' + (L - 10) + '" y="' + (y + 4) + '" text-anchor="end">' + (S.metric === 'money' ? compact(max * t / 4) : nf.format(Math.round(max * t / 4))) + '</text>';
+    }
+    var step = Math.ceil(n / 7);
+    daily.forEach(function (x, i) {
+      var cx = L + band * i + band / 2, h = mv(x, m.bars, m) / max * ih, r = bw / 2;
+      s += '<rect class="gb" x="' + (cx - bw / 2) + '" y="' + T + '" width="' + bw + '" height="' + ih + '" rx="' + r + '"/>';
+      if (h > 0) s += '<rect class="' + (animate ? 'rb2' : '') + ' bar-' + i + '" style="animation-delay:' + (i * (600 / n)) + 'ms" x="' + (cx - bw / 2) + '" y="' + (T + ih - h) + '" width="' + bw + '" height="' + h + '" rx="' + Math.min(r, h / 2) + '" fill="url(#gBar)"/>';
+      if (i % step === 0) s += '<text class="ax" x="' + cx + '" y="' + (H - 6) + '" text-anchor="middle">' + day(x.date) + '</text>';
+    });
+    if (m.line) {
+      var pts = daily.map(function (x, i) { return [L + band * i + band / 2, T + ih - mv(x, m.line, m) / max * ih]; });
+      var dd = 'M' + pts.map(function (q, i) {
+        if (!i) return q[0] + ' ' + q[1];
+        var a = pts[i - 1], mx = (a[0] + q[0]) / 2; return 'C' + mx + ' ' + a[1] + ' ' + mx + ' ' + q[1] + ' ' + q[0] + ' ' + q[1];
+      }).join(' ');
+      s += '<path class="ln' + (animate ? ' draw' : '') + '" d="' + dd + '" pathLength="1000" style="stroke-dasharray:1000;--len:1000"/>';
+    }
+    s += '<line id="vline" x1="0" x2="0" y1="' + T + '" y2="' + (T + ih) + '" stroke="#FAB59D" stroke-dasharray="3 4" opacity="0"/>';
+    s += '<rect id="hit" x="' + L + '" y="' + T + '" width="' + iw + '" height="' + ih + '" fill="transparent"/></svg>';
+    var tt = document.getElementById('tt'); box.innerHTML = s; box.appendChild(tt);
+    box._geo = { L: L, band: band, n: n, T: T, ih: ih, max: max, m: m }; box._series = daily;
+    var hit = box.querySelector('#hit');
+    function pick(e) { var r = box.getBoundingClientRect(); setActive(Math.floor((e.clientX - r.left - L) / band)); }
+    hit.addEventListener('pointermove', pick); hit.addEventListener('pointerdown', pick); // pointerdown — для касания на телефоне
+    hit.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') setActive(-1); });
+  }
+  function setActive(i) {
+    var box = document.getElementById('chart'), g = box._geo, tt = document.getElementById('tt'), vline = box.querySelector('#vline');
+    if (!g || !vline) return;
+    var prev = box.querySelector('.bar-' + S.active); if (prev) prev.setAttribute('fill', 'url(#gBar)');
+    if (i < 0 || i >= g.n) { S.active = -1; tt.classList.remove('on'); vline.setAttribute('opacity', 0); return; }
+    S.active = i;
+    var x = box._series[i], m = g.m, cx = g.L + g.band * i + g.band / 2;
+    var bar = box.querySelector('.bar-' + i); if (bar) bar.setAttribute('fill', 'url(#hatch)');
+    vline.setAttribute('x1', cx); vline.setAttribute('x2', cx); vline.setAttribute('opacity', 1);
+    var top = g.T + g.ih - Math.max(mv(x, m.bars, m), m.line ? mv(x, m.line, m) : 0) / g.max * g.ih;
+    tt.innerHTML = '<b>' + (x.to !== x.date ? day(x.date) + ' — ' + day(x.to) : day(x.date, true)) + '</b><br><i style="background:#F78D66"></i>' + m.label + ': ' + m.fmt(mv(x, m.bars, m)) +
+      (m.line ? '<br><i style="background:#fff"></i>' + m.lineLabel + ': ' + m.fmt(mv(x, m.line, m)) : '');
+    tt.style.left = Math.min(Math.max(cx, 90), box.clientWidth - 90) + 'px'; tt.style.top = Math.max(top - 10, 70) + 'px'; tt.classList.add('on');
+  }
+  document.getElementById('chart').addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault(); var n = document.getElementById('chart')._series.length;
+    setActive(S.active < 0 ? n - 1 : Math.max(0, Math.min(n - 1, S.active + (e.key === 'ArrowRight' ? 1 : -1))));
+  });
+  document.getElementById('chart').addEventListener('blur', function () { setActive(-1); });
+  document.addEventListener('pointerdown', function (e) { if (S.active >= 0 && !e.target.closest('#chart')) setActive(-1); }); // тап вне графика
+  tabs('ctabs', 'aria-selected', function (b) { S.metric = b.dataset.m; renderChart(true); });
+  addEventListener('resize', function () { if (S.data && S.view === 'overview' && !S.empty) renderChart(false); PER.relayout(); });
+
+  // ---------- вход / выход ----------
+  var login = $('login'), app = $('app'), mnav = $('mnav');
+  function toLogin(msg) {
+    S.token = ''; S.role = ''; S.data = null; S.set = null; S.edit = null; ssSet('utm:token', null); $('sBox').textContent = '';
+    SY.run = false; SY.own = false; clearTimeout(SY.t); // опрос синка после выхода не нужен: он очищал бы поле пароля
+    closeDrawer(); app.hidden = true; mnav.hidden = true; login.hidden = false;
+    $('lgPass').value = ''; showMsg($('lgMsg'), msg ? 'err' : '', msg);
+    syncNoCode(); if (hasGas() || pageId()) bootInfo();
+  }
+  function syncNoCode() {
+    var bad = !hasGas() && !pageId(); $('lgForm').hidden = bad; $('lgNoCode').hidden = !bad;
+    var web = !hasGas() && !bad; $('lgId').hidden = !web; // вне Apps Script общий адрес: показываем окончание кода, чтобы сверить со ссылкой владельца
+    if (web) $('lgIdTail').textContent = 'Дашборд …' + pageId().slice(-6);
+  }
+  function showMsg(el, kind, text) { el.hidden = !text; el.textContent = text || ''; el.className = 'msg' + (kind ? ' ' + kind : ''); }
+  function bootInfo() {
+    return call('apiBoot').then(function (b) {
+      S.boot = b; BRAND.name = b.client || BRAND.name; BRAND.logo = b.logo || ''; paintBrand();
+      var setup = !!b.needsSetup;
+      $('lgHint').hidden = !setup; $('lgHint').textContent = setup ? 'Задай пароль администратора в таблице: меню UTM Аналитика.' : '';
+      $('lgPass').disabled = $('lgBtn').disabled = setup;
+    }, function (e) { showMsg($('lgMsg'), 'err', errText(e)); });
+  }
+  function loginErr(e) {
+    if (e.code === 'forbidden') return 'Неверный пароль.';
+    if (e.code === 'busy') return 'Сервер занят, попробуй через несколько секунд.';
+    if (e.code === 'locked') return ERR.locked + ' Владелец может снять блокировку в таблице: меню UTM Аналитика → Сбросить блокировку входа.';
+    if (e.code === 'bad_request') return 'Введи пароль.';
+    return errText(e);
+  }
+  $('lgForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var p = $('lgPass').value; if (!p) { showMsg($('lgMsg'), 'err', 'Введи пароль.'); $('lgPass').focus(); return; }
+    var btn = $('lgBtn'); btn.disabled = true; showMsg($('lgMsg'), '', '');
+    call('apiLogin', p).then(function (r) {
+      S.token = r.token; S.role = r.role; ssSet('utm:token', r.token);
+      return enter();
+    }).catch(function (er) {
+      showMsg($('lgMsg'), 'err', loginErr(er));
+      $('lgPass').select();
+    }).then(function () { btn.disabled = !!(S.boot && S.boot.needsSetup); });
+  });
+  function enter() { // токен есть: показываем приложение и грузим данные
+    login.hidden = true; app.hidden = false; mnav.hidden = false;
+    document.querySelectorAll('[data-admin]').forEach(function (b) { b.hidden = S.role !== 'admin'; });
+    paintBrand();
+    $('pfRole').textContent = S.role === 'admin' ? 'Админ' : 'Просмотр';
+    $('pfMail').textContent = S.role === 'admin' ? 'просмотр и настройки' : 'только просмотр';
+    go(S.view === 'settings' && S.role !== 'admin' ? 'overview' : S.view);
+    return load().catch(function () {});
+  }
+
+  // ---------- данные ----------
+  function showState(kind, msg) {
+    var st = $('state');
+    if (!kind) { st.hidden = true; return; }
+    st.hidden = false;
+    st.innerHTML = kind === 'load' ? '<div class="spin2"></div><b>Загружаем данные…</b>'
+      : kind === 'empty' ? '<b>За этот период данных нет</b>Выбери другой период или запусти синк в настройках.'
+      : '<b>Не получилось загрузить</b>' + esc(msg || '') + '<br><button class="btn-v" id="retry">' + ico('refresh') + 'Повторить</button>';
+    var r = $('retry'); if (r) r.onclick = function () { load().catch(function () {}); };
+  }
+  function load() {
+    var seq = ++S.seq, q = S.per.from ? { from: S.per.from, to: S.per.to } : { days: S.per.days }; // «последние N дней» считает сервер в поясе отчёта
+    if (S.view !== 'settings') { showState('load'); document.querySelectorAll('.view').forEach(function (v) { v.style.visibility = 'hidden'; }); }
+    return callT('apiData', q).then(function (res) {
+      if (seq !== S.seq) return;
+      S.data = res.data; S.role = res.data.meta.role || S.role; CUR = res.data.meta.currency === 'USD' ? 'USD' : 'KZT';
+      BRAND.name = res.data.meta.client || BRAND.name; paintBrand();
+      document.querySelectorAll('[data-admin]').forEach(function (b) { b.hidden = S.role !== 'admin'; });
+      render();
+    }, function (e) {
+      if (seq !== S.seq) return;
+      document.querySelectorAll('.view').forEach(function (v) { v.style.visibility = ''; });
+      if (e.code !== 'forbidden') showState('err', errText(e));
+      throw e;
+    });
+  }
+  $('refresh').addEventListener('click', function () { load().then(function () { toast('Данные обновлены'); }, function () {}); });
+
+  function render() {
+    var d = S.data, m = d.meta, k = d.kpis || {};
+    $('crRange').textContent = day(m.from) + ' — ' + day(m.to);
+    var ga = m.syncedAt || m.generatedAt ? new Date(m.syncedAt || m.generatedAt) : null;
+    var txt = ga && !isNaN(ga) ? (m.syncedAt ? 'обновлено: ' : 'данные на ') + ga.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).replace('.', '') : '';
+    $('updAt').textContent = $('updAt').title = txt; $('sideSync').textContent = txt || 'Синк ещё не запускался';
+    $('prevHint').textContent = 'в сравнении с ' + day(m.prevFrom, true) + ' — ' + day(m.prevTo, true);
+    $('nvLeads').textContent = d.leadsTotal == null ? '—' : nf.format(d.leadsTotal);
+    var un = k.unallocatedSpend > 0 ? 'Расход Meta вне каналов: ' + fmtMoney(k.unallocatedSpend) + '. Он не входит в итоги. Настрой каналы в Настройках.' : '';
+    ['unOv', 'unCh'].forEach(function (id) { var el = $(id); el.hidden = !un; el.innerHTML = un ? ico('info') + '<span></span>' : ''; if (un) el.lastChild.textContent = un; });
+    S.empty = !(k.spend || k.leads || (d.channels && d.channels.length) || (d.leads && d.leads.length));
+    renderView();
+  }
+  function renderView() {
+    document.querySelectorAll('.view').forEach(function (v) { v.style.visibility = ''; });
+    if (S.view === 'settings') { showState(''); if (!$('sBox').firstChild) renderSettings(); else knob('stabs', '[aria-selected="true"]'); return; }
+    var blocked = S.empty;
+    showState(blocked ? 'empty' : '');
+    if (!S.data || blocked) return;
+    ({ overview: renderOverview, channels: renderChannels, leads: renderLeads })[S.view]();
+  }
+  var VIEW_NAMES = { overview: 'Обзор', channels: 'Каналы', leads: 'Заявки', settings: 'Настройки' };
+  function go(view) {
+    if (!VIEW_NAMES[view] || (view === 'settings' && S.role !== 'admin')) view = 'overview';
+    var changed = S.view !== view; S.view = view;
+    if (changed) closeDrawer();
+    Object.keys(VIEW_NAMES).forEach(function (v) { $('v-' + v).hidden = v !== view; });
+    document.querySelectorAll('[data-view]').forEach(function (b) {
+      var on = b.dataset.view === view; b.classList.toggle('on', on);
+      if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('[data-per]').forEach(function (e) { e.hidden = view === 'settings'; });
+    $('crView').textContent = VIEW_NAMES[view];
+    if (changed) window.scrollTo({ top: 0 });
+    if (S.data || view === 'settings') renderView();
+  }
+  document.addEventListener('click', function (e) { var b = e.target.closest('[data-view]'); if (b) go(b.dataset.view); });
+  $('collapse').addEventListener('click', function () { $('app').classList.add('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
+  $('expand').addEventListener('click', function () { $('app').classList.toggle('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
+
+  // ---------- Обзор ----------
+  var KPI = [
+    { k: 'spend', t: 'Расход', ico: 'wallet', f: fmtMoney, sub: function () { return 'Meta и ручной ввод'; } },
+    { k: 'leads', t: 'Заявки', ico: 'users', f: nf0, sub: function () { return 'новые сделки в CRM'; } },
+    { k: 'qualified', t: 'Квалы', ico: 'ucheck', f: nf0, sub: function (c) { return c.qualRate == null ? 'нет заявок' : pct(c.qualRate) + ' от заявок'; } },
+    { k: 'sales', t: 'Продажи', ico: 'cart', f: nf0, sub: function (c) { return c.closeRate == null ? 'нет квалов' : pct(c.closeRate) + ' квалов дошло до продажи'; } },
+    { k: 'revenue', t: 'Выручка', ico: 'coins', f: fmtMoney, sub: function () { return 'сумма проданных'; } },
+    { k: 'cpl', t: 'Цена заявки', ico: 'receipt', f: fmtMoney, inv: true, sub: function () { return 'расход ÷ заявки'; } },
+    { k: 'costPerQualified', t: 'Цена квала', ico: 'tag', f: fmtMoney, inv: true, sub: function () { return 'расход ÷ квалы'; } },
+    { k: 'romiPct', t: 'ROMI', ico: 'percent', f: pct, pp: true, sub: function (c) { return c.roas == null ? 'выручка к расходу' : 'на 1 вложенный — ' + fx2(c.roas) + ' вернулось'; } }
+  ];
+  function noSpend(key, o) { return /^(cpl|costPer|romiPct)/.test(key) && !(o.spend > 0); }
+  function renderOverview() {
+    var k = S.data.kpis || {}, p = k.prev || {};
+    $('kpis').innerHTML = KPI.map(function (d, i) {
+      var cur = noSpend(d.k, k) ? null : k[d.k], prev = noSpend(d.k, p) ? null : p[d.k]; // нет расхода — цена и ROMI не считаются, а не «0 ₸»
+      var delta = d.pp ? ppPill(cur, prev, false) : deltaPill(change(cur, prev), d.inv);
+      return '<article class="k' + (i === 0 ? ' hero' : '') + ' rise" style="animation-delay:' + (.05 + i * .05) + 's"><div class="lab"><span class="chip">' + ico(d.ico) + '</span>' + esc(d.t) + '</div>' +
+        '<div class="val" data-val>—</div><div class="sub2">' + esc(d.sub(k)) + '</div>' +
+        '<div class="row bottom">' + delta + '<span>прошлый: ' + (prev == null ? '—' : d.f(prev)) + '</span></div></article>';
+    }).join('');
+    $('kpis').querySelectorAll('article.k').forEach(function (a, i) { countUp(a.querySelector('[data-val]'), noSpend(KPI[i].k, k) ? null : k[KPI[i].k], KPI[i].f, 1100); });
+    renderChart(true);
+    knob('ctabs', '[aria-selected="true"]');
+  }
+
+  // ---------- Каналы ----------
+  var LEVELS = { utm_source: 'source', utm_medium: 'medium', utm_campaign: 'campaign', utm_content: 'content', utm_term: 'term' };
+  var SPSRC = { meta: 'расход из Meta', manual: 'ручной расход', none: 'без расхода' };
+  function chRow(n, depth, key, top) {
+    var kids = n.children || [], open = !!S.open[key], has = kids.length > 0;
+    var name = top ? n.name : lbl(n.value), small = top ? SPSRC[n.spendSource] || '' : LEVELS[n.level] || n.level;
+    var h = '<div class="tr' + (has ? ' has' : '') + (top ? '' : ' sub') + '" role="row"' + (has ? ' tabindex="0" aria-expanded="' + open + '"' : '') + ' data-k="' + esc(key) + '" style="animation-delay:0s">' +
+      '<span class="cr" style="padding-left:' + (14 + depth * 22) + 'px"><span class="chv' + (has ? '' : ' ph') + '">' + (has ? ico('chevr') : '') + '</span>' +
+      '<span><span class="nm' + (!top && (n.value === '' || n.value == null) ? ' dim' : '') + '" title="' + esc(name) + '">' + esc(name) + '</span><small>' + esc(small) + '</small></span></span>' +
+      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spendSource !== 'none' ? fmtMoney(n.spend) : '—') + '</span>' +
+      '<span class="r">' + nf0(n.leads) + '</span><span class="r">' + nf0(n.qualified) + '</span><span class="r">' + nf0(n.sales) + '</span>' +
+      '<span class="r">' + fmtMoney(n.revenue) + '</span>' +
+      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spend > 0 && n.spendSource !== 'none' ? fmtMoney(n.cpl) : '—') + '</span>' +
+      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spend > 0 && n.spendSource !== 'none' ? pct(n.romiPct) : '—') + '</span></div>';
+    if (open) kids.forEach(function (c) { h += chRow(c, depth + 1, key + '␟' + sf(c.value, ''), false); });
+    return h;
+  }
+  function renderChannels() {
+    var list = S.data.channels || [];
+    $('chRows').innerHTML = list.length ? list.map(function (c) { return chRow(c, 0, c.id, true); }).join('')
+      : '<div class="empty"><b>Каналов пока нет</b>Добавь правила в Настройки → Каналы.</div>';
+  }
+  function toggleCh(row) {
+    if (!row || !row.classList.contains('has')) return;
+    var k = row.dataset.k; S.open[k] = !S.open[k]; renderChannels();
+    var again = $('chRows').querySelector('.tr[data-k="' + (window.CSS && CSS.escape ? CSS.escape(k) : k) + '"]'); if (again) again.focus({ preventScroll: true });
+  }
+  $('chRows').addEventListener('click', function (e) { toggleCh(e.target.closest('.tr')); });
+  $('chRows').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('tr')) { e.preventDefault(); toggleCh(e.target); } });
+
+  // ---------- Заявки ----------
+  var ST_OPTS = [{ v: 'all', t: 'Все статусы' }, { v: 'qual', t: 'Квал' }, { v: 'sold', t: 'Продажа' }, { v: 'noq', t: 'Без квала' }];
+  var ddCh, ddSt;
+  function crmLink(u) {
+    var s = safeUrl(u);
+    return s ? '<a class="amo" href="' + esc(s) + '" target="_blank" rel="noopener noreferrer" aria-label="Открыть сделку в CRM (новая вкладка)">' + ico('arrow') + '<span class="t">в CRM</span></a>' : '<span class="mut">—</span>';
+  }
+  function utmLine(u) { return [u.source, u.medium, u.campaign].map(function (x) { return lbl(x); }).join(' / '); }
+  function statusTag(l) { return l.sold ? '<span class="tg sum">продажа</span>' : l.qualified ? '<span class="tg q">квал</span>' : '<span class="tg nq">без квала</span>'; }
+  function filterLeads() {
+    return (S.data.leads || []).filter(function (l) {
+      var f = S.lf;
+      return (f.ch === 'all' || l.channelId === f.ch) && (f.st === 'all' || (f.st === 'qual' && l.qualified) || (f.st === 'sold' && l.sold) || (f.st === 'noq' && !l.qualified));
+    });
+  }
+  function renderLeads() {
+    var all = S.data.leads || [], chs = S.data.channels || [], cnt = {};
+    all.forEach(function (l) { cnt[l.channelId] = (cnt[l.channelId] || 0) + 1; });
+    var chOpts = [{ v: 'all', t: 'Все каналы', sub: all.length }].concat(chs.map(function (c) { return { v: c.id, t: c.name, sub: cnt[c.id] || 0 }; }));
+    if (!chOpts.some(function (o) { return o.v === S.lf.ch; })) S.lf.ch = 'all';
+    ddCh = dropdown($('ddCh'), 'Канал', chOpts, S.lf.ch, function (v) { S.lf.ch = v; S.lf.n = 30; drawLeads(); });
+    ddSt = dropdown($('ddSt'), 'Статус', ST_OPTS, S.lf.st, function (v) { S.lf.st = v; S.lf.n = 30; drawLeads(); });
+    drawLeads();
+  }
+  function drawLeads() {
+    var rows = S.rows = filterLeads(), box = $('leadsBox'), tot = S.data.leadsTotal, all = (S.data.leads || []).length;
+    $('leadsHint').textContent = (rows.length === all ? '' : 'после фильтра: ' + rows.length + ' · ') + 'показано ' + all + (tot != null && tot > all ? ' из ' + nf.format(tot) : '');
+    if (!rows.length) { box.innerHTML = '<div class="state" style="margin:0">' + (all ? '<b>По фильтру ничего нет</b>Смени канал или статус.' : '<b>Заявок за период нет</b>Выбери другой период.') + '</div>'; return; }
+    var more = rows.length - S.lf.n;
+    box.innerHTML = '<div class="lt" role="table" aria-label="Заявки"><div class="lt-h" role="row"><span>Дата</span><span>Канал</span><span>Метки</span><span>Стадия</span><span>Статус</span><span class="r">Сумма</span><span class="r">CRM</span></div>' +
+      rows.slice(0, S.lf.n).map(function (l, i) {
+        var u = l.utm || {};
+        return '<div class="lr" role="row" tabindex="0" data-i="' + i + '" style="animation-delay:' + Math.min(i * 20, 400) + 'ms">' +
+          '<span class="dtc">' + esc(dt(l.createdAt)) + '</span>' +
+          '<span class="ch" title="' + esc(l.channelName) + '">' + esc(l.channelName) + '</span>' +
+          '<span class="ut" title="' + esc(utmLine(u)) + '">' + esc(utmLine(u)) + '</span>' +
+          '<span><span class="stp">' + esc(sf(l.stageName)) + '</span></span>' +
+          '<span>' + statusTag(l) + '</span>' +
+          '<span class="r amt' + (l.sold ? '' : ' dim') + '">' + (l.amount > 0 ? fmtMoney(l.amount) : '—') + '</span>' +
+          '<span class="r">' + crmLink(l.url) + '</span></div>';
+      }).join('') + (more > 0 ? '<button class="more" id="more">Показать ещё ' + Math.min(more, 30) + ' из ' + more + '</button>' : '') + '</div>';
+  }
+  $('leadsBox').addEventListener('click', function (e) {
+    if (e.target.closest('a')) return; // «в CRM» — только ссылка, шторку не открываем
+    if (e.target.closest('#more')) { S.lf.n += 30; drawLeads(); var r = $('leadsBox').querySelectorAll('.lr')[S.lf.n - 30]; if (r) r.focus(); return; }
+    var t = e.target.closest('.lr'); if (t) openLead(+t.dataset.i);
+  });
+  $('leadsBox').addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('lr')) { e.preventDefault(); openLead(+e.target.dataset.i); }
+  });
+
+  // ---------- шторка ----------
+  var lastFocus = null, drawer = $('drawer');
+  function showDrawer(label) {
+    drawer.setAttribute('aria-label', label); lastFocus = document.activeElement;
+    drawer.classList.add('on'); drawer.setAttribute('aria-hidden', 'false'); $('scrim').classList.add('on');
+    app.inert = true; mnav.inert = true;
+    drawer.scrollTop = 0;
+    drawer.querySelector('.dw-close').onclick = closeDrawer;
+    setTimeout(function () { drawer.querySelector('.dw-close').focus(); }, 50);
+  }
+  function closeDrawer() {
+    if (!drawer.classList.contains('on')) return;
+    drawer.classList.remove('on'); drawer.setAttribute('aria-hidden', 'true'); $('scrim').classList.remove('on');
+    app.inert = false; mnav.inert = false;
+    if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  }
+  $('scrim').addEventListener('click', closeDrawer);
+  function openLead(i) {
+    var l = S.rows[i]; if (!l) return;
+    var u = l.utm || {}, link = safeUrl(l.url);
+    $('drawerBody').innerHTML = '<div class="dw-lead">' +
+      '<div class="dw-h"><span>Заявка</span><button class="dw-close" aria-label="Закрыть">' + ico('x') + '</button></div>' +
+      '<h3>№ ' + esc(l.crmId) + '</h3><div class="sub">создана ' + esc(dt(l.createdAt)) + '</div>' +
+      '<div class="dw-tags"><span class="stp">' + esc(sf(l.stageName)) + '</span>' + statusTag(l) + '</div>' +
+      (link ? '<a class="btn-v dw-cta" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + ico('arrow') + 'Открыть в CRM</a>' : '') +
+      '<h4>Канал и метки</h4><dl class="kv"><dt>Канал</dt><dd>' + esc(l.channelName) + '</dd>' +
+      '<dt>utm_source</dt><dd>' + esc(lbl(u.source)) + '</dd><dt>utm_medium</dt><dd>' + esc(lbl(u.medium)) + '</dd><dt>utm_campaign</dt><dd>' + esc(lbl(u.campaign)) + '</dd>' +
+      '<dt>utm_content</dt><dd>' + esc(lbl(u.content)) + '</dd><dt>utm_term</dt><dd>' + esc(lbl(u.term)) + '</dd></dl>' +
+      '<h4>Деньги</h4><dl class="kv"><dt>Сумма сделки</dt><dd>' + (l.amount > 0 ? fmtMoney(l.amount) : '—') + '</dd><dt>Продажа</dt><dd>' + (l.sold ? 'да' : 'нет') + '</dd><dt>Квал</dt><dd>' + (l.qualified ? 'да' : 'нет') + '</dd></dl></div>';
+    showDrawer('Заявка № ' + l.crmId);
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (drawer.classList.contains('on')) closeDrawer(); else if (pfOpen()) closePf(true); else PER.close(true);
+  });
+
+  // ---------- Настройки ----------
+  var CRM_T = { none: 'Без CRM', amocrm: 'amoCRM', bitrix24: 'Битрикс24' };
+  var SEC_BY = { amocrm: ['AMO_TOKEN', 'Токен amoCRM'], bitrix24: ['BITRIX_WEBHOOK', 'Вебхук Битрикс24'] };
+  function csv(v) { return String(v == null ? '' : v).split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function clone(a) { return JSON.parse(JSON.stringify(a || [])); }
+  function opt(v, t, cur, off) { return '<option value="' + esc(v) + '"' + (String(v) === String(cur) ? ' selected' : '') + (off ? ' disabled' : '') + '>' + esc(t) + '</option>'; }
+  function fld(label, inner, hint, id) { return '<div class="fld"><label class="fl"' + (id ? ' for="' + id + '"' : '') + '>' + esc(label) + '</label>' + inner + (hint ? '<div class="hintk">' + hint + '</div>' : '') + '</div>'; }
+  function tin(attrs, val, ph) { return '<input class="tin" ' + attrs + ' value="' + esc(val == null ? '' : val) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '>'; }
+  function cardH(icn, title, extra) { return '<div class="card-h"><h3><span class="chip">' + ico(icn) + '</span>' + esc(title) + '</h3>' + (extra || '') + '</div>'; }
+  function sMsg() { return '<div class="msg" id="sMsg" role="status" hidden></div>'; }
+  function say(kind, text) { var el = $('sMsg'); if (el) showMsg(el, kind, text); if (kind === 'err') toast(text, 3600); }
+  function textErr(v, max, required) {
+    var s = String(v == null ? '' : v).trim();
+    if (required && !s) return 'Впиши значение.';
+    if (s.length > max) return 'Не длиннее ' + max + ' символов.';
+    if (/[\u0000-\u001f\u007f]/.test(s)) return 'Уберите управляющие символы.';
+    if (/^[=+\-@]/.test(s)) return 'Не начинай с = + - @: таблица примет это за формулу.';
+    return '';
+  }
+  function fieldErr(id, text) { // причина рядом с полем; без перерисовки, чтобы не терять набранное
+    var el = $(id); if (!el) return;
+    var host = el.closest('.fld') || el.parentNode, old = host.querySelector('[data-err="' + id + '"]');
+    if (old) old.remove();
+    el.removeAttribute('aria-invalid');
+    if (!text) return;
+    el.setAttribute('aria-invalid', 'true');
+    var d = document.createElement('div'); d.className = 'hintk err'; d.setAttribute('data-err', id); d.setAttribute('role', 'alert'); d.textContent = text; host.appendChild(d);
+  }
+  function markDirty() { var d = $('dirty'); if (d) d.textContent = 'не сохранено'; }
+
+  // Модель редактирования S.edit живёт отдельно от серверных данных S.set: после сохранения раздела обновляется только своя часть
+  function loadSettings() {
+    if (S.set) return Promise.resolve();
+    return callT('apiSettingsGet').then(function (r) {
+      S.set = r;
+      S.edit = { cfg: Object.assign({}, r.settings), sec: {}, qual: csv(r.settings.qualification_stage_ids), sale: csv(r.settings.sale_stage_ids),
+        channels: clone(r.channels), spend: clone(r.spend), check: null };
+    });
+  }
+  function applySettings(res, keys) { // ответ apiSettingsSave: серверные настройки целиком, в форму — только сохранённые ключи
+    if (!res.settings) return;
+    S.set.settings = res.settings;
+    keys.forEach(function (k) { S.edit.cfg[k] = res.settings[k]; });
+  }
+  function renderSettings() {
+    var box = $('sBox');
+    if (!S.set) {
+      box.innerHTML = '<div class="state" style="margin:0"><div class="spin2"></div><b>Загружаем настройки…</b></div>';
+      loadSettings().then(function () { if (S.view === 'settings') drawTab(); }, function (e) {
+        if (e.code !== 'forbidden') box.innerHTML = '<div class="state" style="margin:0"><b>Не получилось загрузить настройки</b>' + esc(errText(e)) + '<br><button class="btn-v" id="sRetry">' + ico('refresh') + 'Повторить</button></div>';
+        var r = $('sRetry'); if (r) r.onclick = renderSettings;
+      });
+      return;
+    }
+    drawTab();
+  }
+  function drawTab() {
+    var fn = { conn: tabConn, qual: tabQual, chan: tabChan, spend: tabSpend, acc: tabAcc, look: tabLook, sync: tabSync }[S.tab];
+    $('sBox').innerHTML = fn() + sMsg();
+    knob('stabs', '[aria-selected="true"]');
+    if (S.tab === 'look') afterLook();
+    if (S.tab === 'sync') syncInit();
+  }
+  tabs('stabs', 'aria-selected', function (b) { S.tab = b.dataset.s; if (S.set) drawTab(); });
+  function reloadData() { load().catch(function () {}); } // данные дашборда сразу берут новые настройки
+
+  // --- Подключения ---
+  var BX_ZONES = ['ru', 'by', 'kz', 'ua', 'com', 'eu', 'de', 'es', 'fr', 'it', 'pl', 'in', 'cn', 'vn', 'id', 'jp', 'uk', 'mx', 'co', 'com.br', 'com.tr'];
+  var DOM_BX = new RegExp('^[a-z0-9-]+\\.bitrix24\\.(' + BX_ZONES.map(function (z) { return z.replace('.', '\\.'); }).join('|') + ')$');
+  var DOM_AMO = /^[a-z0-9-]+(\.[a-z0-9-]+)*\.(amocrm\.ru|amocrm\.com|kommo\.com)$/;
+  function domErr(type, v) {
+    v = String(v || '').trim().toLowerCase(); if (!v) return '';
+    if (type === 'amocrm') return /^[a-z0-9][a-z0-9.\-]{0,98}$/.test(v) && (v.indexOf('.') < 0 || DOM_AMO.test(v)) ? '' : 'Только поддомен (company) или адрес на amocrm.ru, amocrm.com, kommo.com. Без https:// и слэшей.';
+    if (type === 'bitrix24') return DOM_BX.test(v) ? '' : 'Нужен адрес вида company.bitrix24.kz: один поддомен и зона из списка (' + BX_ZONES.join(', ') + '). Без https:// и слэшей.';
+    return '';
+  }
+  function hookErr(v) {
+    var m = /^https:\/\/([A-Za-z0-9.\-]+)\/rest\/\d+\/[A-Za-z0-9]+\/?$/.exec(v);
+    return m && DOM_BX.test(m[1].toLowerCase()) ? '' : 'Нужен адрес вида https://company.bitrix24.kz/rest/1/ключ/ (хост как в поле «Адрес аккаунта»).';
+  }
+  function secretField(name, label, hint) {
+    var s = (S.set.secrets || {})[name] || {}, v = S.edit.sec[name] || '';
+    return '<div class="fld"><label class="fl" for="sec_' + name + '">' + esc(label) + '</label><div class="sec-r"><span class="tg ' + (s.set ? 'q' : 'nq') + '">' + (s.set ? 'задан' : 'не задан') + '</span>' +
+      '<input class="tin" id="sec_' + name + '" type="password" autocomplete="new-password" data-sec="' + name + '" value="' + esc(v) + '" placeholder="Новое значение">' +
+      (s.set ? '<button type="button" class="ghostbtn sm danger" data-act="secdel" data-n="' + name + '">' + ico('trash') + 'Удалить</button>' : '') + '</div>' +
+      '<div class="hintk">' + (hint ? hint + ' ' : '') + 'Значение не показывается. Чтобы заменить, впиши новое и нажми «Сохранить».</div></div>';
+  }
+  function norm(x) { return String(x == null ? '' : x).trim().toLowerCase(); }
+  function crmChanged() { var c = S.edit.cfg, o = S.set.settings; return norm(c.crm_type) !== norm(o.crm_type) || norm(c.crm_domain) !== norm(o.crm_domain); }
+  function paintCrmWarn() { var w = $('crmWarn'); if (w) w.hidden = !crmChanged(); }
+  function tabConn() {
+    var c = S.edit.cfg, sec = SEC_BY[c.crm_type], fx = c.fx_source === 'fixed', kzt = (c.currency || 'KZT') === 'KZT';
+    var chk = S.edit.check, chkH = '';
+    if (chk) chkH = ['meta', 'crm'].map(function (k) { var r = chk[k]; return r ? '<div class="bn ' + (r.ok ? 'ok' : 'err') + '">' + ico(r.ok ? 'check' : 'alert') + '<span><b>' + (k === 'meta' ? 'Meta' : 'CRM') + ':</b> ' + esc(r.text) + '</span></div>' : ''; }).join('');
+    var bx = c.crm_type === 'bitrix24';
+    return '<div class="card">' + cardH('users', 'CRM') +
+      fld('Какая CRM', '<select class="sel" id="f_crm" data-k="crm_type">' + Object.keys(CRM_T).map(function (k) { return opt(k, CRM_T[k], c.crm_type || 'none'); }).join('') + '</select>', '', 'f_crm') +
+      (sec ? fld('Адрес аккаунта', tin('id="f_dom" data-k="crm_domain"', c.crm_domain, bx ? 'company.bitrix24.kz' : 'company или company.amocrm.ru'), bx ? 'Адрес вида company.bitrix24.kz, без https://.' : 'Поддомен или адрес на amocrm.ru, amocrm.com, kommo.com. Без https://.', 'f_dom') +
+        secretField(sec[0], sec[1], bx ? 'Только https, пример: https://company.bitrix24.kz/rest/1/abc123xyz/.' : '') : '') +
+      '</div><div class="card">' + cardH('mega', 'Реклама Meta') +
+      fld('Рекламный кабинет', tin('id="f_acc" data-k="meta_ad_account_id"', c.meta_ad_account_id, '123456789'), 'Пусто — расход Meta не подтягивается.', 'f_acc') +
+      secretField('META_TOKEN', 'Токен Meta') + '</div>' +
+      '<div class="card">' + cardH('coins', 'Валюта и курс') + '<div class="grid2">' +
+      fld('Валюта отчёта', '<select class="sel" id="f_cur" data-k="currency">' + opt('KZT', '₸ Тенге', c.currency || 'KZT') + opt('USD', '$ Доллар', c.currency) + '</select>', '', 'f_cur') +
+      fld('Валюта кабинета Meta', '<select class="sel" id="f_mcur" data-k="meta_currency">' + opt('USD', '$ Доллар', c.meta_currency || 'USD') + opt('KZT', '₸ Тенге', c.meta_currency) + '</select>', '', 'f_mcur') +
+      fld('Откуда курс', '<select class="sel" id="f_fxs" data-k="fx_source">' + opt('nbk', 'Нацбанк РК, на день расхода', c.fx_source || 'nbk', !kzt) + opt('fixed', 'Свой фиксированный курс', c.fx_source) + '</select>', kzt ? '' : 'Курс Нацбанка доступен, только когда валюта отчёта — тенге.', 'f_fxs') +
+      fld('Фиксированный курс', tin('id="f_fx" data-k="fx_rate_to_report" inputmode="decimal"' + (fx ? '' : ' disabled'), c.fx_rate_to_report), 'Сколько единиц валюты отчёта в 1 единице валюты кабинета.', 'f_fx') + '</div></div>' +
+      chkH + '<div class="bn warn" id="crmWarn"' + (crmChanged() ? '' : ' hidden') + '>' + ico('alert') + '<span>После сохранения заявки будут стёрты и загружены заново при синке.</span></div>' +
+      '<div class="acts"><button class="btn-v" data-act="saveConn">' + ico('check') + 'Сохранить</button><button class="ghostbtn" data-act="check">' + ico('refresh') + 'Проверить подключения</button></div>';
+  }
+  function saveConn() {
+    var c = S.edit.cfg, patch = {}, bad = false;
+    function chk(id, text) { fieldErr(id, text); if (text) bad = true; }
+    chk('f_dom', domErr(c.crm_type, c.crm_domain));
+    chk('f_acc', /^(act_)?\d{0,20}$/.test(String(c.meta_ad_account_id || '').trim()) ? '' : 'Только цифры номера кабинета.');
+    Object.keys(S.edit.sec).forEach(function (n) {
+      var v = String(S.edit.sec[n] || '').trim(); if (!v) return;
+      chk('sec_' + n, /\s/.test(v) ? 'Без пробелов и переносов строки.' : n === 'BITRIX_WEBHOOK' ? hookErr(v) : '');
+    });
+    if (bad) { say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
+    ['crm_type', 'crm_domain', 'meta_ad_account_id', 'currency', 'meta_currency', 'fx_source'].forEach(function (k) { patch[k] = String(c[k] == null ? '' : c[k]).trim(); });
+    if (patch.fx_source === 'nbk' && patch.currency !== 'KZT') { fieldErr('f_fxs', 'Курс Нацбанка — только для отчёта в тенге.'); say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
+    if (c.fx_source === 'fixed') {
+      var r = Number(String(c.fx_rate_to_report).replace(',', '.'));
+      if (!(r > 0)) { fieldErr('f_fx', 'Впиши курс числом больше нуля.'); say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
+      patch.fx_rate_to_report = r;
+    }
+    var names = Object.keys(S.edit.sec).filter(function (n) { return String(S.edit.sec[n] || '').trim(); });
+    // сначала секреты: отклонённый вебхук не должен успеть переключить CRM и стереть сделки
+    return names.reduce(function (p, n) {
+      return p.then(function () {
+        return callT('apiSecretSave', n, S.edit.sec[n]).then(function (res) {
+          S.set.secrets[n] = { set: res.set !== false }; S.edit.sec[n] = ''; var inp = $('sec_' + n); if (inp) inp.value = '';
+        });
+      });
+    }, Promise.resolve()).then(function () { return callT('apiSettingsSave', patch); }).then(function (res) {
+      applySettings(res, Object.keys(patch));
+      if (res.cleared) { // старые стадии и выбор по ним больше не годятся
+        S.set.stages = []; S.edit.qual = csv(S.set.settings.qualification_stage_ids); S.edit.sale = csv(S.set.settings.sale_stage_ids);
+        S.edit.cfg.qualification_stage_ids = S.set.settings.qualification_stage_ids; S.edit.cfg.sale_stage_ids = S.set.settings.sale_stage_ids;
+      }
+      drawTab();
+      say('ok', res.cleared ? 'Сохранено. Данные CRM очищены. Запусти синк в разделе Синк.' : 'Сохранено.');
+      reloadData();
+    });
+  }
+
+  // --- Квалификация и продажа ---
+  function stageGroups() {
+    var g = [], by = {};
+    (S.set.stages || []).slice().sort(function (a, b) { return (a.sort || 0) - (b.sort || 0); }).forEach(function (s) {
+      var k = s.pipeline_id; if (!by[k]) { by[k] = { name: s.pipeline_name || k, items: [] }; g.push(by[k]); }
+      by[k].items.push(s);
+    });
+    return g;
+  }
+  function stageBlock(kind, title, hint, chosen) {
+    var g = stageGroups();
+    return '<div class="card">' + cardH(kind === 'qual' ? 'ucheck' : 'cart', title) + '<p class="sub-p" style="margin-top:-6px">' + hint + '</p>' +
+      (g.length ? g.map(function (p) {
+        return '<div class="ml">' + esc(p.name) + '</div><div class="ck-list">' + p.items.map(function (s) {
+          return '<label class="cbx"><input type="checkbox" data-q="' + kind + '" value="' + esc(s.stage_id) + '"' + (chosen.indexOf(String(s.stage_id)) >= 0 ? ' checked' : '') + '><span>' + esc(s.name) + '</span></label>';
+        }).join('') + '</div>';
+      }).join('') : '<div class="empty" style="padding:20px"><b>Стадий пока нет</b>Запусти синк или нажми «Обновить стадии из CRM».</div>') + '</div>';
+  }
+  function tabQual() {
+    return stageBlock('qual', 'Квал — с какой стадии', 'Отметь стадии, начиная с которых заявка считается квалифицированной. Одинаковые стадии в разных воронках (например, «Успешно») отмечаются вместе.', S.edit.qual) +
+      stageBlock('sale', 'Продажа', 'Отметь стадии продажи. Если ничего не отмечено, продажей считается системный статус «Успешно».', S.edit.sale) +
+      '<div class="acts"><button class="btn-v" data-act="saveQual">' + ico('check') + 'Сохранить</button><button class="ghostbtn" data-act="stages">' + ico('refresh') + 'Обновить стадии из CRM</button></div>';
+  }
+
+  // --- Каналы (правила) ---
+  var UTMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+  function noCond(c) { return !UTMS.some(function (u) { return String(c[u] || '').trim(); }); }
+  function tabChan() {
+    var L = S.edit.channels;
+    return '<div class="bn">' + ico('info') + '<span>Пустое поле — любое значение. <code>insta*</code> — начинается с «insta», <code>*cpc*</code> — содержит «cpc». Регистр и пробелы по краям не важны. Правила проверяются сверху вниз, срабатывает первое подходящее. Остальные заявки попадут в «Прочие метки» или «Без меток».</span></div>' +
+      '<div class="bn">' + ico('info') + '<span>Расход в итогах — это сумма по каналам. Кампании Meta, которые не подошли ни одному каналу, в итог не входят: проверь, что у каждой есть свой канал с источником «Реклама Meta».</span></div>' +
+      (L.length ? L.map(function (c, i) {
+        return '<div class="rule" data-r="' + i + '"><div class="rule-h"><b>Правило ' + (i + 1) + '</b>' +
+          '<button class="ib2" data-act="up" data-i="' + i + '" aria-label="Выше"' + (i === 0 ? ' disabled' : '') + '><span style="display:grid;transform:rotate(0)">' + ico('chevu') + '</span></button>' +
+          '<button class="ib2" data-act="down" data-i="' + i + '" aria-label="Ниже"' + (i === L.length - 1 ? ' disabled' : '') + '>' + ico('chevd') + '</button>' +
+          '<button class="ib2 danger" data-act="del" data-i="' + i + '" aria-label="Удалить правило">' + ico('trash') + '</button></div>' +
+          fld('Название канала', tin('id="cn' + i + '" data-l="channels" data-i="' + i + '" data-f="name" maxlength="80"', c.name, 'Например, Instagram'), '', 'cn' + i) +
+          '<div class="g5">' + UTMS.map(function (u) { return fld(u, tin('id="u' + i + u + '" data-l="channels" data-i="' + i + '" data-f="' + u + '"', c[u], 'любое'), '', 'u' + i + u); }).join('') + '</div>' +
+          '<div class="hintk" id="nc' + i + '"' + (noCond(c) ? '' : ' hidden') + '>Без меток канал не забирает заявки, только расход.</div>' +
+          '<div class="grid2" style="margin:14px 0 0">' +
+          fld('Откуда расход', '<select class="sel" id="ss' + i + '" data-l="channels" data-i="' + i + '" data-f="spend_source">' + opt('meta', 'Реклама Meta', c.spend_source) + opt('manual', 'Вручную', c.spend_source) + opt('none', 'Нет расхода', c.spend_source || 'none') + '</select>', '', 'ss' + i) +
+          (c.spend_source === 'meta' ? fld('Фильтр кампаний Meta', tin('id="mf' + i + '" data-l="channels" data-i="' + i + '" data-f="meta_filter"', c.meta_filter, 'часть названия'), 'Пусто — весь кабинет.', 'mf' + i) : '') + '</div></div>';
+      }).join('') : '<div class="state" style="margin:0 0 16px"><b>Правил пока нет</b>Добавь первое, и заявки начнут раскладываться по каналам.</div>') +
+      '<div class="acts"><button class="ghostbtn" data-act="add">' + ico('plus') + 'Добавить правило</button><button class="btn-v" data-act="saveChan">' + ico('check') + 'Сохранить</button><span class="dirty" id="dirty"></span></div>';
+  }
+  function saveChan() {
+    var L = S.edit.channels;
+    var bad = false;
+    L.forEach(function (c, i) {
+      var chk = [['cn' + i, c.name, 80, true]].concat(UTMS.map(function (u) { return ['u' + i + u, c[u], 100, false]; }), c.spend_source === 'meta' ? [['mf' + i, c.meta_filter, 100, false]] : []);
+      chk.forEach(function (x) {
+        var e = textErr(x[1], x[2], x[3]);
+        if (!e && String(x[1] || '').split('*').length > 6) e = 'Не больше 5 звёздочек.';
+        fieldErr(x[0], e); if (e) bad = true;
+      });
+    });
+    if (bad) { say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
+    var out = L.map(function (c, i) {
+      var o = { name: String(c.name).trim(), spend_source: c.spend_source || 'none', meta_filter: c.spend_source === 'meta' ? String(c.meta_filter || '').trim() : '', sort: i + 1 };
+      UTMS.forEach(function (u) { o[u] = String(c[u] || '').trim(); });
+      if (c.id) o.id = c.id;
+      return o;
+    });
+    return callT('apiChannelsSave', out).then(function (res) {
+      if (Array.isArray(res.channels)) { S.set.channels = res.channels; S.edit.channels = clone(res.channels); }
+      if (Array.isArray(res.spend)) { // сервер сам удалил расход удалённых каналов: этих строк в форме быть не должно, новые и правки остаются
+        var keep = {}; res.spend.forEach(function (r) { keep[r.id] = true; });
+        S.set.spend = res.spend; S.edit.spend = S.edit.spend.filter(function (r) { return !r.id || keep[r.id]; });
+      }
+      var dead = S.edit.spend.some(function (r) { return !chExists(r.channel_id); });
+      drawTab(); say('ok', dead ? 'Правила сохранены. У некоторых строк ручного расхода канала больше нет: выбери другой в разделе «Ручной расход».' : 'Правила сохранены.');
+      reloadData();
+    });
+  }
+
+  // --- Ручной расход ---
+  function chExists(id) { return !!id && (S.set.channels || []).some(function (c) { return c.id === id; }); }
+  function tabSpend() {
+    var L = S.edit.spend, chs = (S.set.channels || []).filter(function (c) { return c.spend_source === 'manual'; });
+    if (!chs.length && !L.length) return '<div class="state" style="margin:0"><b>Нет каналов с ручным расходом</b>Выбери «Вручную» у нужного канала в разделе «Каналы» и сохрани.</div>';
+    var all = S.set.channels || [];
+    return '<div class="bn">' + ico('info') + '<span>Сумма делится поровну по дням от «с» до «по» включительно. В отчёт попадает доля дней, которые входят в выбранный период.</span></div>' +
+      (L.length ? L.map(function (r, i) {
+        var dead = !!r.channel_id && !chExists(r.channel_id);
+        var o = chs.slice(); if (r.channel_id && !dead && !o.some(function (c) { return c.id === r.channel_id; })) o = o.concat(all.filter(function (c) { return c.id === r.channel_id; }));
+        return '<div class="rule' + (dead ? ' bad' : '') + '"><div class="rule-h"><b>Расход ' + (i + 1) + '</b><button class="ib2 danger" data-act="sdel" data-i="' + i + '" aria-label="Удалить строку">' + ico('trash') + '</button></div>' +
+          '<div class="g3">' +
+          fld('Канал', '<select class="sel" id="sc' + i + '" data-l="spend" data-i="' + i + '" data-f="channel_id"' + (dead ? ' aria-invalid="true"' : '') + '><option value="">— выбери —</option>' + o.map(function (c) { return opt(c.id, c.name, dead ? '' : r.channel_id); }).join('') + '</select>' + (dead ? '<div class="hintk err" data-err="sc' + i + '" role="alert">Выбери канал: прежнего больше нет.</div>' : ''), '', 'sc' + i) +
+          fld('С', tin('id="sf' + i + '" type="date" data-l="spend" data-i="' + i + '" data-f="date_from"', r.date_from), '', 'sf' + i) +
+          fld('По', tin('id="st' + i + '" type="date" data-l="spend" data-i="' + i + '" data-f="date_to"', r.date_to), '', 'st' + i) +
+          fld('Сумма', tin('id="sa' + i + '" inputmode="decimal" data-l="spend" data-i="' + i + '" data-f="amount"', r.amount, '0'), '', 'sa' + i) + '</div>' +
+          fld('Комментарий', tin('id="sm' + i + '" data-l="spend" data-i="' + i + '" data-f="comment" maxlength="200"', r.comment, 'Необязательно'), '', 'sm' + i) + '</div>';
+      }).join('') : '<div class="state" style="margin:0 0 16px"><b>Записей пока нет</b>Добавь расход, который не идёт через Meta.</div>') +
+      '<div class="acts"><button class="ghostbtn" data-act="sadd"' + (chs.length ? '' : ' disabled') + '>' + ico('plus') + 'Добавить расход</button><button class="btn-v" data-act="saveSpend">' + ico('check') + 'Сохранить</button><span class="dirty" id="dirty"></span></div>';
+  }
+  function saveSpend() {
+    var L = S.edit.spend, bad = '';
+    L.forEach(function (r, i) {
+      var e = textErr(r.comment, 200, false); fieldErr('sm' + i, e); if (e) bad = 'Исправь выделенные поля.';
+      var ce = chExists(r.channel_id) ? '' : 'Выбери канал'; fieldErr('sc' + i, ce); if (ce) { bad = bad || 'Выбери канал в строке ' + (i + 1) + '.'; var rl = $('sc' + i); if (rl) rl.closest('.rule').classList.add('bad'); }
+    });
+    var out = L.map(function (r, i) {
+      var a = Number(String(r.amount == null ? '' : r.amount).replace(/\s/g, '').replace(',', '.'));
+      if (bad) return r;
+      if (!r.date_from || !r.date_to || r.date_to < r.date_from) bad = 'Проверь даты в строке ' + (i + 1) + ': «по» не может быть раньше «с».';
+      else if (!(a >= 0) || r.amount === '' || r.amount == null) bad = 'Впиши сумму числом в строке ' + (i + 1) + '.';
+      var o = { channel_id: r.channel_id, date_from: r.date_from, date_to: r.date_to, amount: a, comment: String(r.comment || '').trim() };
+      if (r.id) o.id = r.id;
+      return o;
+    });
+    if (bad) { say('err', bad); return Promise.reject(); }
+    return callT('apiSpendSave', out).then(function (res) {
+      if (Array.isArray(res.spend)) { S.set.spend = res.spend; S.edit.spend = clone(res.spend); }
+      drawTab(); say('ok', 'Расход сохранён.'); reloadData();
+    });
+  }
+
+  // --- Доступ ---
+  // Пароль: 12–200 знаков, минимум 3 вида из 4 (строчные, заглавные, цифры, прочие) или длина от 20 — то же правило, что на сервере
+  function pwKinds(v) { return (/[a-zа-яё]/.test(v) ? 1 : 0) + (/[A-ZА-ЯЁ]/.test(v) ? 1 : 0) + (/[0-9]/.test(v) ? 1 : 0) + (/[^a-zA-Zа-яёА-ЯЁ0-9]/.test(v) ? 1 : 0); }
+  function pwErr(v) {
+    if (v.length < 12 || v.length > 200) return 'От 12 до 200 символов.';
+    if (v.length < 20 && pwKinds(v) < 3) return 'Нужно минимум 3 вида знаков из 4 (строчные, заглавные, цифры, прочие) или длина от 20 символов.';
+    return '';
+  }
+  var PW_CH = { lo: 'abcdefghijkmnpqrstuvwxyz', up: 'ABCDEFGHJKLMNPQRSTUVWXYZ', di: '23456789' }; // без похожих 0/O/1/l/I
+  function randInt(n) { var a = new Uint32Array(1), lim = Math.floor(4294967296 / n) * n; do { crypto.getRandomValues(a); } while (a[0] >= lim); return a[0] % n; }
+  function genPassword() {
+    var all = PW_CH.lo + PW_CH.up + PW_CH.di, out;
+    do { out = ''; for (var i = 0; i < 20; i++) out += all.charAt(randInt(all.length)); } while (!/[a-z]/.test(out) || !/[A-Z]/.test(out) || !/[2-9]/.test(out));
+    return out;
+  }
+  function copyText(text, inp) {
+    function fallback() { try { inp.select(); document.execCommand('copy'); toast('Пароль скопирован'); } catch (e) { toast('Не удалось скопировать: выдели пароль и скопируй вручную'); } }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast('Пароль скопирован'); }, fallback); else fallback(); } catch (e) { fallback(); }
+  }
+  function pwCard(kind, title, status) {
+    return '<div class="card">' + cardH('key', title, status ? '<span class="tg ' + (status.set ? 'q' : 'nq') + '">' + (status.set ? 'задан' : 'не задан') + '</span>' : '') +
+      '<div class="grid2">' + fld('Новый пароль', '<input class="tin" id="pw_' + kind + '" type="password" autocomplete="new-password" data-pw="' + kind + '">', 'От 12 до 200 символов: минимум 3 вида знаков из 4 (строчные, заглавные, цифры, прочие) или длина от 20.', 'pw_' + kind) +
+      fld('Повтори пароль', '<input class="tin" id="pw2_' + kind + '" type="password" autocomplete="new-password" data-pw2="' + kind + '">', '', 'pw2_' + kind) + '</div>' +
+      '<div class="acts"><button class="btn-v" data-act="pw" data-kind="' + kind + '">' + ico('check') + 'Сохранить пароль</button>' +
+      '<button class="ghostbtn" data-act="pwgen" data-kind="' + kind + '">' + ico('key') + 'Придумать пароль</button><button class="ghostbtn" data-act="pwcopy" data-kind="' + kind + '" hidden>' + ico('check') + 'Скопировать</button></div></div>';
+  }
+  function tabAcc() {
+    return '<div class="bn">' + ico('info') + '<span>Пароль просмотра отдай тем, кто должен видеть цифры. Пароль администратора открывает ещё и настройки. Пароли должны отличаться. Пока пароль просмотра не задан, смотреть можно только по паролю администратора.</span></div>' +
+      pwCard('view', 'Пароль просмотра', (S.set.secrets || {}).VIEW_PASS) + pwCard('admin', 'Пароль администратора', null);
+  }
+  function savePw(kind) {
+    var a = $('pw_' + kind).value, b = $('pw2_' + kind).value, other = $('pw_' + (kind === 'view' ? 'admin' : 'view'));
+    var e1 = pwErr(a) || (other && other.value && other.value === a ? 'Пароли просмотра и администратора не должны совпадать.' : ''), e2 = !e1 && a !== b ? 'Пароли не совпали.' : '';
+    fieldErr('pw_' + kind, e1); fieldErr('pw2_' + kind, e2);
+    if (e1 || e2) { say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
+    return callT('apiPasswordSave', kind, a).then(function (r) {
+      if (r.token) { S.token = r.token; ssSet('utm:token', r.token); } // прежние входы сброшены, у нас — новый токен
+      if (kind === 'view') S.set.secrets.VIEW_PASS = { set: true };
+      drawTab(); say('ok', 'Пароль сохранён. Остальные входы по старому паролю закрыты.');
+    }, function (e) {
+      if (e.code === 'bad_request') { // причина уже под полем: общую плашку не делаем безликой
+        var why = 'Пароль не принят: от 12 до 200 символов, минимум 3 вида знаков из 4 или длина от 20, пароли просмотра и администратора должны отличаться.';
+        fieldErr('pw_' + kind, why); say('err', why); throw {};
+      }
+      throw e;
+    });
+  }
+
+  // --- Оформление ---
+  function tabLook() {
+    return '<div class="card">' + cardH('sliders', 'Название') + fld('Название клиента', tin('id="f_name" data-k="client_name" maxlength="80"', S.edit.cfg.client_name, 'Например, Клиника «Здоровье»'), 'Показывается на входе и в шапке.', 'f_name') +
+      '<div class="acts"><button class="btn-v" data-act="saveName">' + ico('check') + 'Сохранить</button></div></div>' +
+      '<div class="card">' + cardH('image', 'Логотип') + '<div class="logo-prev"><div class="logo-box" id="logoBox"></div><div><p class="sub-p" style="margin:0 0 10px">PNG, JPEG или WebP. Большой файл уменьшится до 400 пикселей.</p>' +
+      '<div class="sec-r"><label class="ghostbtn">' + ico('plus') + 'Загрузить файл<input class="sr" type="file" id="logoFile" accept="image/png,image/jpeg,image/webp"></label>' +
+      '<button class="ghostbtn danger" data-act="logodel"' + (BRAND.logo ? '' : ' disabled') + '>' + ico('trash') + 'Убрать логотип</button></div></div></div></div>';
+  }
+  function afterLook() { setLogo($('logoBox'), BRAND.logo, 72); }
+  function shrink(file, max) {
+    return new Promise(function (ok, fail) {
+      var fr = new FileReader();
+      fr.onerror = function () { fail(new Error('read')); };
+      fr.onload = function () {
+        var img = new Image();
+        img.onerror = function () { fail(new Error('img')); };
+        img.onload = function () {
+          var k = Math.min(1, max / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          var x = c.getContext('2d'); x.drawImage(img, 0, 0, w, h);
+          var out = c.toDataURL('image/png');
+          if (out.length > 390000) { x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); x.drawImage(img, 0, 0, w, h); out = c.toDataURL('image/jpeg', .85); }
+          ok(out);
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+  function uploadLogo(file) {
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { say('err', 'Подойдут только PNG, JPEG или WebP.'); return; }
+    shrink(file, 400).then(function (url) {
+      if (!/^data:image\/(png|jpeg|webp);base64,/.test(url)) throw new Error('type');
+      return callT('apiLogoSave', url).then(function () { return url; });
+    }).then(function (url) {
+      BRAND.logo = url; paintBrand(); drawTab(); say('ok', 'Логотип сохранён.');
+    }, function (e) { say('err', e && e.code ? errText(e) : 'Не получилось прочитать картинку. Попробуй другой файл.'); });
+  }
+
+  // --- Синк ---
+  var SY = { run: false, own: false, t: null, t0: 0 };
+  var STAGE = { meta: 'Реклама Meta', crm: 'Сделки из CRM', stages: 'Стадии', done: 'Готово' };
+  function fmtWhen(iso) { var d = iso ? new Date(iso) : null; return d && !isNaN(d) ? d.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : 'ещё не было'; }
+  function tabSync() {
+    return '<div class="card sy-card" id="syCard">' + cardH('refresh', 'Обновление данных') +
+      '<p class="sub-p" style="margin:0 0 4px">Данные сами обновляются раз в сутки ночью. Если нужно свежее, запусти вручную (не чаще раза в 10 минут).</p>' +
+      (S.set && S.set.sync && !S.set.sync.triggers ? '<div class="bn warn">' + ico('alert') + '<span>Автосинк не включён: в таблице меню UTM Аналитика → Первичная настройка.</span></div>' : '') +
+      '<p class="sub-p" style="margin:0 0 16px">Последний синк: <b id="syLast">' + esc(fmtWhen(S.set && S.set.sync && S.set.sync.lastAt)) + '</b></p>' +
+      '<div class="acts"><button class="btn-v" data-act="sync" id="syBtn">' + ico('refresh') + 'Запустить синк</button></div>' +
+      '<div id="syBox" hidden><div class="sy-row"><b id="syTxt" aria-live="polite">Запускаем…</b><span class="sy-pct" id="syPct" aria-hidden="true">0%</span></div>' +
+      '<div class="sy-bar" role="progressbar" aria-label="Прогресс синка" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="syBar"><i id="syFill"></i></div></div></div>';
+  }
+  function syShow(pct, text, st) {
+    var box = $('syBox'); if (!box) return;
+    box.hidden = false; $('syCard').className = 'card sy-card' + (st ? ' ' + st : '');
+    pct = Math.max(0, Math.min(100, Math.round(pct || 0)));
+    $('syTxt').textContent = text; $('syPct').textContent = pct + '%'; $('syFill').style.width = pct + '%'; $('syBar').setAttribute('aria-valuenow', pct);
+  }
+  function syFinish(st, text) {
+    SY.run = false; SY.own = false; clearTimeout(SY.t);
+    var b = $('syBtn'); if (b) b.disabled = false;
+    if (st === 'ok') {
+      syShow(100, text, 'ok'); toast('Данные обновлены');
+      if (S.set) callT('apiSettingsGet').then(function (r) { // после синка обновляем только время последнего синка, правки в формах не трогаем
+        if (!S.set) return; S.set.sync = r.sync; var l = $('syLast'); if (l) l.textContent = fmtWhen(r.sync && r.sync.lastAt);
+      }, function () {});
+      reloadData();
+    } else syShow(0, text, 'err');
+  }
+  function syPoll() { // apiSync держит запрос до конца, поэтому прогресс опрашиваем отдельно
+    clearTimeout(SY.t);
+    SY.t = setTimeout(function () {
+      if (!SY.run) return;
+      callT('apiProgress').then(function (r) {
+        if (!SY.run) return;
+        var p = r.progress, fin = p && p.finishedAt ? new Date(p.finishedAt).getTime() : 0, mine = p && (!fin || fin >= SY.t0 - 60000);
+        if (p && p.stage === 'error' && mine) return syFinish('err', 'Синк остановился: ' + sf(p.error, 'неизвестная ошибка') + '. Можно запустить заново.');
+        if (!SY.own && mine) { // синк запущен не из этого окна: следим по прогрессу
+          if (p.error) return syFinish('err', 'Синк остановился: ' + p.error);
+          if (fin) return syFinish('ok', 'Готово');
+        }
+        if (Date.now() - SY.t0 > 7 * 60e3) return syFinish('err', 'Синк не отвечает. Загляни на лист Log в таблице.');
+        if (mine && !fin) syShow(p.pct, STAGE[p.stage] || sf(p.stage, 'Работаем…'), '');
+        syPoll();
+      }, function () { if (SY.run) syPoll(); });
+    }, 1200);
+  }
+  function syncInit() { // открыли вкладку: вдруг синк уже идёт
+    var b = $('syBtn');
+    if (SY.run) { if (b) b.disabled = true; syShow(0, 'Работаем…', ''); syPoll(); return; }
+    callT('apiProgress').then(function (r) {
+      var p = r.progress;
+      if (S.tab !== 'sync' || SY.run || !p || !p.stage || p.finishedAt || p.error) return;
+      SY.run = true; SY.own = false; SY.t0 = Date.now(); if ($('syBtn')) $('syBtn').disabled = true; syShow(p.pct, STAGE[p.stage] || p.stage, ''); syPoll();
+    }, function () {});
+  }
+  function startSync() {
+    SY.run = true; SY.own = true; SY.t0 = Date.now(); $('syBtn').disabled = true; syShow(0, 'Запускаем…', ''); syPoll();
+    return callT('apiSync').then(function () { if (SY.run) syFinish('ok', 'Готово'); }, function (e) {
+      // сам вызов оборвался (лимит 6 минут Apps Script), а не «нет связи»
+      if (SY.run) syFinish('err', e.code === 'network' ? 'Синк прерван по лимиту времени Google. Запусти ещё раз через 10 минут.' : errText(e));
+      throw e;
+    });
+  }
+
+  // --- общий разбор событий настроек ---
+  var sBox = $('sBox');
+  sBox.addEventListener('input', function (e) { onField(e.target, false); });
+  sBox.addEventListener('change', function (e) { onField(e.target, true); });
+  function redrawKeep(t) { var id = t.id; drawTab(); if (id && $(id)) $(id).focus(); }
+  function onField(t, ch) {
+    if (!S.edit) return;
+    if (t.id && t.getAttribute('aria-invalid')) fieldErr(t.id, '');
+    if (t.dataset.k) {
+      S.edit.cfg[t.dataset.k] = t.value;
+      if (t.dataset.k === 'crm_type' || t.dataset.k === 'crm_domain') paintCrmWarn();
+      if (t.dataset.k === 'currency' && t.value !== 'KZT' && S.edit.cfg.fx_source === 'nbk') { S.edit.cfg.fx_source = 'fixed'; }
+      if (ch && (t.dataset.k === 'crm_type' || t.dataset.k === 'fx_source' || t.dataset.k === 'currency')) redrawKeep(t);
+    } else if (t.dataset.sec) S.edit.sec[t.dataset.sec] = t.value;
+    else if (t.dataset.l) {
+      S.edit[t.dataset.l][+t.dataset.i][t.dataset.f] = t.value; markDirty();
+      if (t.dataset.l === 'channels' && /^utm_/.test(t.dataset.f)) { var nc = $('nc' + t.dataset.i); if (nc) nc.hidden = !noCond(S.edit.channels[+t.dataset.i]); }
+      if (ch && t.dataset.f === 'spend_source') redrawKeep(t);
+      if (ch && t.dataset.l === 'spend' && t.dataset.f === 'channel_id') redrawKeep(t);
+    } else if (t.dataset.q) {
+      var kind = t.dataset.q, arr = S.edit[kind], v = t.value, i = arr.indexOf(v);
+      if (t.checked && i < 0) arr.push(v); else if (!t.checked && i >= 0) arr.splice(i, 1);
+      // стадии с одним id в разных воронках (amo: 142 и 143) — одна и та же стадия: галочки двигаются вместе
+      sBox.querySelectorAll('input[data-q="' + kind + '"]').forEach(function (x) { if (x.value === v) x.checked = t.checked; });
+    } else if (t.id === 'logoFile' && t.files && t.files[0]) { uploadLogo(t.files[0]); t.value = ''; }
+  }
+  function busy(btn, fn) {
+    if (!btn || btn.disabled) return;
+    btn.disabled = true; btn.classList.add('busy'); say('', '');
+    Promise.resolve().then(fn).catch(function (e) { if (e && e.code) say('err', errText(e)); }).then(function () { btn.disabled = false; btn.classList.remove('busy'); });
+  }
+  sBox.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b || !S.edit) return;
+    var a = b.dataset.act, i = +b.dataset.i, L = S.edit.channels;
+    if (a === 'saveConn') busy(b, saveConn);
+    else if (a === 'check') busy(b, function () { return callT('apiCheck').then(function (r) { S.edit.check = r; drawTab(); }); });
+    else if (a === 'secdel') busy(b, function () { var n = b.dataset.n; return callT('apiSecretSave', n, '').then(function () { S.edit.sec[n] = ''; S.set.secrets[n] = { set: false }; drawTab(); say('ok', 'Секрет удалён.'); }); });
+    else if (a === 'saveQual') busy(b, function () {
+      return callT('apiSettingsSave', { qualification_stage_ids: S.edit.qual.join(','), sale_stage_ids: S.edit.sale.join(',') }).then(function (res) {
+        applySettings(res, ['qualification_stage_ids', 'sale_stage_ids']); S.edit.qual = csv(S.edit.cfg.qualification_stage_ids); S.edit.sale = csv(S.edit.cfg.sale_stage_ids);
+        drawTab(); say('ok', 'Стадии сохранены.'); reloadData();
+      });
+    });
+    else if (a === 'stages') busy(b, function () {
+      return callT('apiStagesRefresh').then(function (res) { if (Array.isArray(res.stages)) S.set.stages = res.stages; drawTab(); say('ok', 'Стадии обновлены из CRM.'); }); // галочки не трогаем
+    });
+    else if (a === 'add') { L.push({ name: '', utm_source: '', utm_medium: '', utm_campaign: '', utm_content: '', utm_term: '', spend_source: 'none', meta_filter: '' }); drawTab(); markDirty(); var f = $('cn' + (L.length - 1)); if (f) f.focus(); }
+    else if (a === 'del') { L.splice(i, 1); drawTab(); markDirty(); }
+    else if (a === 'up' || a === 'down') { var j = a === 'up' ? i - 1 : i + 1; if (L[j]) { var x = L[i]; L[i] = L[j]; L[j] = x; drawTab(); markDirty(); var nb = sBox.querySelector('[data-act="' + a + '"][data-i="' + j + '"]:not(:disabled)') || sBox.querySelector('[data-act="' + (a === 'up' ? 'down' : 'up') + '"][data-i="' + j + '"]'); if (nb) nb.focus(); } }
+    else if (a === 'saveChan') busy(b, saveChan);
+    else if (a === 'sadd') { S.edit.spend.push({ channel_id: '', date_from: '', date_to: '', amount: '', comment: '' }); drawTab(); markDirty(); var s = $('sc' + (S.edit.spend.length - 1)); if (s) s.focus(); }
+    else if (a === 'sdel') { S.edit.spend.splice(i, 1); drawTab(); markDirty(); }
+    else if (a === 'saveSpend') busy(b, saveSpend);
+    else if (a === 'pw') busy(b, function () { return savePw(b.dataset.kind); });
+    else if (a === 'pwgen') { // пароль живёт только в двух полях этой карточки, открытым текстом, пока не сохранён или не закрыта вкладка
+      var kd = b.dataset.kind, g = genPassword(), p1 = $('pw_' + kd), p2 = $('pw2_' + kd);
+      p1.value = p2.value = g; p1.type = p2.type = 'text'; fieldErr('pw_' + kd, ''); fieldErr('pw2_' + kd, '');
+      sBox.querySelector('[data-act="pwcopy"][data-kind="' + kd + '"]').hidden = false; p1.focus(); p1.select();
+    }
+    else if (a === 'pwcopy') copyText($('pw_' + b.dataset.kind).value, $('pw_' + b.dataset.kind));
+    else if (a === 'saveName') busy(b, function () {
+      var n = String(S.edit.cfg.client_name || '').trim(), er = textErr(n, 80, true);
+      fieldErr('f_name', er); if (er) return Promise.reject();
+      return callT('apiSettingsSave', { client_name: n }).then(function (res) { applySettings(res, ['client_name']); BRAND.name = n || BRAND.name; paintBrand(); say('ok', 'Название сохранено.'); reloadData(); });
+    });
+    else if (a === 'logodel') busy(b, function () { return callT('apiLogoSave', '').then(function () { BRAND.logo = ''; paintBrand(); drawTab(); say('ok', 'Логотип убран.'); }); });
+    else if (a === 'sync') busy(b, startSync);
+  });
+
+  // ---------- старт ----------
+  var ACTIVE_ID = pageId();
+  paintBrand();
+  (function start() {
+    syncNoCode();
+    if (!hasGas() && !pageId()) { toLoginQuiet(); return; }
+    var tok = ssGet('utm:token');
+    bootInfo().then(function () {
+      if (!tok) { toLoginQuiet(); return; }
+      S.token = tok; enter();
+    });
+  })();
+  // другой код дашборда в ссылке: прежнее состояние (токен, данные, опрос синка) сбрасывается, начинаем с входа
+  addEventListener('hashchange', function () {
+    if (hasGas() || pageId() === ACTIVE_ID) return;
+    ACTIVE_ID = pageId(); BRAND.name = 'UTM Аналитика'; BRAND.logo = ''; paintBrand();
+    var saved = pageId() ? ssGet('utm:token') : null; // токен нового кода в хранилище не трогаем: после перезагрузки вход по нему сохранится
+    toLogin(''); if (saved) ssSet('utm:token', saved); toLoginQuiet();
+  });
+  function toLoginQuiet() { login.hidden = false; app.hidden = true; mnav.hidden = true; $('lgPass').focus(); }
+})();
+
+</script>
+</body>
+</html>

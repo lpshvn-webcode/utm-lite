@@ -1,0 +1,8 @@
+{
+  "name": "utm-analytics",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "@google/clasp": "3.4.1"
+  }
+}
