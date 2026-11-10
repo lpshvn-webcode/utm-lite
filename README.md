@@ -4,7 +4,7 @@
 
 ## Установка
 
-Скачай [INSTALL.md](https://github.com/lpshvn-webcode/utm-lite/blob/v1.0.0/INSTALL.md), положи в пустую папку, открой её в Claude Code и напиши: «Установи UTM Аналитику по INSTALL.md».
+Скачай [INSTALL.md](https://github.com/lpshvn-webcode/utm-lite/blob/v1.1.0/INSTALL.md), положи в пустую папку, открой её в Claude Code и напиши: «Установи UTM Аналитику по INSTALL.md».
 
 Как пользоваться и что делать, если что-то не так: [ИНСТРУКЦИЯ.md](ИНСТРУКЦИЯ.md).
 

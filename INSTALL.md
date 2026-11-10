@@ -46,7 +46,7 @@ git --version
 ## Шаг 2. Код
 
 ```bash
-git clone --depth 1 --branch v1.0.0 https://github.com/lpshvn-webcode/utm-lite utm-analytics
+git clone --depth 1 --branch v1.1.0 https://github.com/lpshvn-webcode/utm-lite utm-analytics
 cd utm-analytics
 npm ci
 ```

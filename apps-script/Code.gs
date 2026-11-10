@@ -78,7 +78,7 @@ function openDashboard() {
     return;
   }
   var html = '<div style="font:14px/1.5 Arial,sans-serif">'
-    + '<p><a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;padding:10px 18px;background:#F05A35;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Открыть дашборд</a></p>'
+    + '<p><a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;padding:10px 18px;background:#523AC4;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Открыть дашборд</a></p>'
     + '<p style="color:#555">Ссылка для сотрудников и клиентов:</p>'
     + '<input readonly onclick="this.select()" value="' + url + '" style="width:100%;box-sizing:border-box;padding:8px;font:12px monospace">'
     + '<p style="color:#888;font-size:12px">Не открывается и пишет «Не удалось открыть файл»? В браузере несколько аккаунтов Google — открой ссылку в окне инкогнито.</p></div>';
