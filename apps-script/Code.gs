@@ -18,14 +18,19 @@ function onOpen() {
 }
 
 // Страница живёт в iframe Google; X-Frame-Options оставляем по умолчанию (не ALLOWALL)
-var DASH_URL_RE_ = /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/;
-function doGet() {
-  // Адрес дашборда запоминаем здесь: только внутри опубликованного приложения Google отдаёт адрес именно этого развёртывания
-  // (из меню таблицы getUrl() возвращает адрес другого, неопубликованного). Значение — от Google, не от посетителя.
+// обычный адрес и адрес Workspace (.../a/macros/<домен>/s/<код>/exec); код развёртывания — первая группа
+var DASH_URL_RE_ = /^https:\/\/script\.google\.com\/(?:macros|a\/macros\/[a-z0-9.\-]+)\/s\/([\w-]+)\/exec$/;
+var PAGES_URL_ = 'https://lpshvn-webcode.github.io/utm-lite/';
+// Адрес дашборда запоминаем в doGet и doPost: только внутри опубликованного приложения Google отдаёт адрес именно этого развёртывания
+// (из меню таблицы getUrl() возвращает адрес другого, неопубликованного). Значение — от Google, не от посетителя.
+function rememberDashUrl_() {
   try {
     var u = String(ScriptApp.getService().getUrl() || '');
     if (DASH_URL_RE_.test(u) && props_().getProperty('DASH_URL') !== u) props_().setProperty('DASH_URL', u);
-  } catch (e) { /* адрес — удобство для меню; его сбой не мешает открыть дашборд */ }
+  } catch (e) { /* адрес — удобство для меню; его сбой не мешает работе */ }
+}
+function doGet() {
+  rememberDashUrl_();
   return HtmlService.createHtmlOutputFromFile('Index')
     .setTitle('UTM Аналитика')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
@@ -33,7 +38,7 @@ function doGet() {
 }
 
 // Вызовы со страницы-оболочки (GitHub Pages): fetch с телом-JSON {"fn": "apiX", "args": [...]}, Content-Type text/plain (без preflight).
-// Токен сессии — аргумент функций, cookie не используются, поэтому CSRF неприменим. Вызываются только 14 api* из явной таблицы
+// Токен сессии — аргумент функций, cookie не используются, поэтому CSRF неприменим. Вызываются только 12 api* из явной таблицы
 // (имя → вызов; не this[fn] и не eval), всё остальное — bad_request. Наружу только объект, который вернула api-функция, или код ошибки.
 var DO_POST_MAX_BODY_ = 600000, DO_POST_MAX_ARGS_ = 3;
 var API_TABLE_ = {
@@ -45,8 +50,6 @@ var API_TABLE_ = {
   apiSettingsSave: function (a) { return apiSettingsSave(a[0], a[1]); },
   apiSecretSave: function (a) { return apiSecretSave(a[0], a[1], a[2]); },
   apiPasswordSave: function (a) { return apiPasswordSave(a[0], a[1], a[2]); },
-  apiChannelsSave: function (a) { return apiChannelsSave(a[0], a[1]); },
-  apiSpendSave: function (a) { return apiSpendSave(a[0], a[1]); },
   apiLogoSave: function (a) { return apiLogoSave(a[0], a[1]); },
   apiCheck: function (a) { return apiCheck(a[0]); },
   apiStagesRefresh: function (a) { return apiStagesRefresh(a[0]); },
@@ -61,6 +64,7 @@ function doPost(e) {
     if (!isPlainObject_(req) || typeof req.fn !== 'string' || !has_(API_TABLE_, req.fn) || !Array.isArray(req.args) || req.args.length > DO_POST_MAX_ARGS_) {
       res = { ok: false, error: 'bad_request' };
     } else {
+      rememberDashUrl_(); // только после проверки запроса: на мусор свойства не пишем
       res = API_TABLE_[req.fn](req.args);
       if (!isPlainObject_(res)) res = { ok: false, error: 'server_error' };
     }
@@ -72,18 +76,20 @@ function doPost(e) {
 function openDashboard() {
   var ui = menuUi_();
   if (!ui) return FORBIDDEN_;
-  var url = String(props_().getProperty('DASH_URL') || '');
-  if (!DASH_URL_RE_.test(url)) {
-    ui.alert('Адрес дашборда ещё не известен', 'Открой дашборд один раз по ссылке из окна развёртывания: Расширения → Apps Script → Начать развертывание → Управление развертываниями → URL. После этого пункт меню запомнит адрес.', ui.ButtonSet.OK);
+  var m = DASH_URL_RE_.exec(String(props_().getProperty('DASH_URL') || ''));
+  if (!m) {
+    ui.alert('Адрес дашборда ещё не известен', 'Открой дашборд один раз по ссылке, которую выдала установка. После этого пункт меню запомнит адрес.', ui.ButtonSet.OK);
     return;
   }
+  var url = PAGES_URL_ + '#' + m[1], fallback = m[0]; // оба значения собраны из проверенных частей, в разметку попадают только они
   var html = '<div style="font:14px/1.5 Arial,sans-serif">'
     + '<p><a href="' + url + '" target="_blank" rel="noopener" style="display:inline-block;padding:10px 18px;background:#523AC4;color:#fff;border-radius:10px;text-decoration:none;font-weight:600">Открыть дашборд</a></p>'
     + '<p style="color:#555">Ссылка для сотрудников и клиентов:</p>'
     + '<input readonly onclick="this.select()" value="' + url + '" style="width:100%;box-sizing:border-box;padding:8px;font:12px monospace">'
-    + '<p style="color:#888;font-size:12px">Не открывается и пишет «Не удалось открыть файл»? В браузере несколько аккаунтов Google — открой ссылку в окне инкогнито.</p></div>';
+    + '<p style="color:#888;font-size:12px;margin-top:14px">Запасной вход внутри Google: <a href="' + fallback + '" target="_blank" rel="noopener" style="color:#888">' + fallback + '</a><br>'
+    + 'Пишет «Не удалось открыть файл»? В браузере несколько аккаунтов Google — открой ссылку в окне инкогнито.</p></div>';
   // без try: если у скрипта ещё нет разрешения на окна, Google сам покажет запрос доступа (пойманная ошибка его бы скрыла)
-  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(460).setHeight(230), 'UTM Аналитика');
+  ui.showModalDialog(HtmlService.createHtmlOutput(html).setWidth(460).setHeight(280), 'UTM Аналитика');
 }
 
 // Первый пароль администратора — через окно таблицы (в веб-приложении его ещё нечем защитить)

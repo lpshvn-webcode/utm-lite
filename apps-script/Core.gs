@@ -4,18 +4,15 @@
 // ───────── Схема листов (контракт: docs/SPEC.md) ─────────
 var SHEET_HEADERS = {
   Settings: ['key', 'value'],
-  Channels: ['id', 'name', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'spend_source', 'meta_filter', 'sort'],
-  Spend_Manual: ['id', 'channel_id', 'date_from', 'date_to', 'amount', 'comment'],
-  Meta_Spend: ['date', 'account_id', 'campaign_id', 'campaign_name', 'spend', 'impressions', 'clicks', 'currency', 'fx_rate', 'spend_report'],
+  Meta_Ads: ['date', 'account_id', 'campaign_id', 'campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 'spend', 'impressions', 'clicks', 'meta_leads', 'currency', 'fx_rate', 'spend_report'],
   CRM_Leads: ['crm_id', 'crm_type', 'created_at', 'closed_at', 'stage_id', 'stage_name', 'pipeline_id', 'status', 'amount', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'updated_at'],
   Stages: ['pipeline_id', 'pipeline_name', 'stage_id', 'name', 'sort', 'kind'],
   Assets: ['key', 'chunk', 'data'],
   Log: ['ts', 'level', 'source', 'message']
 };
-// Колонки-текст: длинные id и даты-строки не должны превращаться в числа/Date
-// Текстовые колонки: пишем как есть в ячейки с форматом '@' (формула там не исполняется), без апострофа
-var TEXT_COLUMNS = ['key', 'value', 'id', 'name', 'channel_id', 'date', 'date_from', 'date_to', 'account_id', 'campaign_id', 'campaign_name', 'crm_id', 'stage_id', 'stage_name',
-  'pipeline_id', 'created_at', 'closed_at', 'updated_at', 'data', 'comment', 'meta_filter', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+// Текстовые колонки: пишем как есть в ячейки с форматом '@' (формула там не исполняется, длинные id не превращаются в числа), без апострофа
+var TEXT_COLUMNS = ['key', 'value', 'name', 'date', 'account_id', 'campaign_id', 'campaign_name', 'adset_id', 'adset_name', 'ad_id', 'ad_name', 'crm_id', 'stage_id', 'stage_name',
+  'pipeline_id', 'created_at', 'closed_at', 'updated_at', 'data', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
 var UTM_FIELDS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
 
@@ -114,9 +111,10 @@ function decodeEntities_(s) {
 // lowercase, HTML-entities, дефисы/тире/подчёркивания/пробелы → один пробел
 function normalizeName_(s) {
   if (s === null || s === undefined) return '';
-  return decodeEntities_(s).toLowerCase().replace(/[\s\-–—_]+/g, ' ').trim();
+  var t = String(s);
+  try { t = decodeURIComponent(t); } catch (e) { /* битая последовательность %… — оставляем строку как есть */ }
+  return decodeEntities_(t.replace(/\+/g, ' ')).toLowerCase().replace(/[\s\-–—_]+/g, ' ').trim();
 }
-function isFilled_(v) { return v !== null && v !== undefined && String(v).trim() !== ''; }
 
 // Квал: статус won или стадия из списка (id или название)
 function evalQualified_(lead, stageList) {
@@ -182,10 +180,19 @@ function buildBitrixStageRows_(statuses, pipelineNames, pipelineIds) {
 }
 
 // ───────── Meta ─────────
-function metaCampaignRow_(r) {
+// actions: [{action_type, value}] → число лидов (результат «лид»; переписки не считаем)
+function extractLeads_(actions) {
+  var map = {};
+  (actions || []).forEach(function (a) { map[a.action_type] = num_(a.value); });
+  return map['lead'] !== undefined ? map['lead'] : (map['onsite_conversion.lead_grouped'] || 0);
+}
+// Строка insights (level=ad) → строка Meta_Ads. Превью, картинки, destination не забираем
+function metaAdRow_(r) {
   return {
-    date: r.date_start, account_id: String(r.account_id || ''), campaign_id: String(r.campaign_id || ''), campaign_name: r.campaign_name || '',
-    spend: num_(r.spend), impressions: num_(r.impressions), clicks: num_(r.clicks), currency: r.account_currency || '', fx_rate: '', spend_report: ''
+    date: r.date_start, account_id: String(r.account_id || ''), campaign_id: String(r.campaign_id || ''), campaign_name: cleanText_(r.campaign_name),
+    adset_id: String(r.adset_id || ''), adset_name: cleanText_(r.adset_name), ad_id: String(r.ad_id || ''), ad_name: cleanText_(r.ad_name),
+    spend: num_(r.spend), impressions: num_(r.impressions), clicks: num_(r.clicks), meta_leads: extractLeads_(r.actions),
+    currency: r.account_currency || '', fx_rate: '', spend_report: ''
   };
 }
 function parseNbkRate_(xml, code) {
@@ -199,7 +206,7 @@ function parseNbkRate_(xml, code) {
   }
   return 0;
 }
-// Расход строки Meta_Spend в валюте отчёта: курс дня (spend_report), иначе фиксированный курс
+// Расход строки Meta_Ads в валюте отчёта: курс дня (spend_report), иначе фиксированный курс
 // useReport=false (fx_source=fixed) — сохранённый spend_report игнорируется
 function spendInReport_(r, fx, useReport) {
   return useReport && r.spend_report !== undefined && r.spend_report !== '' ? num_(r.spend_report) : num_(r.spend) * fx;
@@ -225,117 +232,214 @@ function syncErrorText_(source, message) {
   return (source + ': ' + sanitizeLog_(message)).replace(/[^\s@]+@[^\s@]+/g, '…').replace(/\+?\d[\d\s()-]{6,}\d/g, '…').slice(0, 150);
 }
 
-// ───────── Каналы ─────────
-var SYSTEM_NONE = { id: '_none', name: 'Без меток' };
-var SYSTEM_OTHER = { id: '_other', name: 'Прочие метки' };
-var TREE_LEVELS = UTM_FIELDS;
-
-function utmNorm_(v) { return v === null || v === undefined ? '' : String(v).trim().toLowerCase(); }
-// Правила по sort по возрастанию, при равенстве — как в таблице
-function sortChannels_(channels) {
-  return (channels || []).map(function (c, i) { return { c: c, i: i }; })
-    .sort(function (a, b) { return num_(a.c.sort) - num_(b.c.sort) || a.i - b.i; })
-    .map(function (x) { return x.c; });
+// ───────── Привязка заявки к рекламе Meta ─────────
+// Пустышки вместо значений (незаполненный шаблон): не считаются метками
+var UTM_PLACEHOLDERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'utm source', 'utm medium', 'utm campaign', 'utm content', 'utm term'];
+function isPlaceholderUtm_(v) {
+  if (v === null || v === undefined) return true;
+  var t = String(v).trim().toLowerCase();
+  if (t === '' || UTM_PLACEHOLDERS.indexOf(t) >= 0) return true;
+  return /^\{\{[^{}]*\}\}$/.test(t) || /^\{[^{}]*\}$/.test(t) || /^\[[^\[\]]*\]$/.test(t); // {{campaign.name}}, {campaign}, [campaign]
 }
-// Условия правил: null = любое, строка = точное (в нижнем регистре), массив = маска с * (части между звёздочками)
-function compileChannels_(channels) {
-  // канал без единого условия — только для расхода (радио, офлайн): заявки не забирает
-  return sortChannels_(channels).filter(function (c) {
-    return UTM_FIELDS.some(function (f) { return utmNorm_(c[f]) !== ''; });
-  }).map(function (c) {
-    return {
-      id: String(c.id), name: c.name,
-      tests: UTM_FIELDS.map(function (f) {
-        var p = utmNorm_(c[f]);
-        if (p === '') return null;
-        if (p.indexOf('*') < 0) return p;
-        return p.split('*');
-      })
-    };
-  });
-}
-// Маска без regex (нет риска тяжёлых выражений): начало, части между * по порядку через indexOf, конец
-function globMatch_(parts, v) {
-  var last = parts.length - 1, pos = parts[0].length;
-  if (v.indexOf(parts[0]) !== 0) return false;
-  for (var i = 1; i < last; i++) {
-    var at = v.indexOf(parts[i], pos);
-    if (at < 0) return false;
-    pos = at + parts[i].length;
-  }
-  return v.length - pos >= parts[last].length && v.slice(v.length - parts[last].length) === parts[last];
-}
-// utm — объект с полями utm_source…utm_term → {id, name}
-function assignChannel_(utm, compiled) {
-  var vals = UTM_FIELDS.map(function (f) { return utmNorm_(utm[f]); });
-  for (var i = 0; i < compiled.length; i++) {
-    var ok = true;
-    for (var j = 0; j < 5 && ok; j++) {
-      var t = compiled[i].tests[j];
-      if (t === null) continue;
-      ok = typeof t === 'string' ? vals[j] === t : globMatch_(t, vals[j]);
-    }
-    if (ok) return { id: compiled[i].id, name: compiled[i].name };
-  }
-  return vals.every(function (v) { return v === ''; }) ? SYSTEM_NONE : SYSTEM_OTHER;
-}
-
-// ───────── Расход каналов ─────────
-// Meta: кампания (по campaign_id, имя — из самой свежей строки) уходит в первый по sort канал spend_source=meta,
-// чьё meta_filter содержится в имени (пустой фильтр = любая). Ручной: сумма поровну по дням date_from..date_to, в период — доля дней.
-// useReport — брать spend_report (fx_source=nbk), иначе spend × fx.
-// → {byChannel: {id: сумма}, byDay: {YYYY-MM-DD: сумма}, unallocated: расход Meta за период, не попавший ни в один канал}
-function channelSpend_(channels, metaRows, manualRows, from, to, fx, useReport) {
-  var sorted = sortChannels_(channels), byChannel = {}, byDay = {};
-  function add(id, day, amt) { byChannel[id] = (byChannel[id] || 0) + amt; byDay[day] = (byDay[day] || 0) + amt; }
-  var camp = {}, owner = {}, metaTotal = 0, metaTaken = 0;
-  (metaRows || []).forEach(function (r) {
-    var id = String(r.campaign_id), d = dateKey_(r.date);
-    if (!camp[id] || d >= camp[id].date) camp[id] = { name: String(r.campaign_name || '').toLowerCase(), date: d };
-  });
-  Object.keys(camp).forEach(function (id) {
-    for (var i = 0; i < sorted.length; i++) {
-      if (sorted[i].spend_source !== 'meta') continue;
-      var f = utmNorm_(sorted[i].meta_filter);
-      if (f === '' || camp[id].name.indexOf(f) >= 0) { owner[id] = String(sorted[i].id); return; }
+// Нормализованные непустые значения пяти меток заявки
+function utmPoolOf_(lead) {
+  var out = [];
+  UTM_FIELDS.forEach(function (k) {
+    if (!isPlaceholderUtm_(lead[k])) {
+      var n = normalizeName_(lead[k]);
+      if (n !== '' && out.indexOf(n) < 0) out.push(n);
     }
   });
+  return out;
+}
+
+var MIN_SUBSTRING_LEN = 6; // «название внутри метки» — только для названий от 6 знаков; короче — лишь точное совпадение
+var MIN_ID_LEN = 10;       // номер в метке — цифры длиной от 10 знаков
+var NO_MATCH = { method: 'none', campaignId: null, campaignName: null, adsetId: null, adsetName: null, adId: null, adName: null };
+
+// Справочник рекламы из ВСЕХ строк Meta_Ads (не только периода). У каждого id копятся все названия, под которыми он встречался
+// (после переименования старые заявки находятся по старому названию); в ответ идёт самое свежее непустое, пустое названием не затирается.
+// Для поиска: exact — «название → записи по уровням», lens — «первые 6 знаков → длины названий» (поиск вхождения без перебора справочника)
+function buildAdIndex_(metaRows) {
+  var camps = {}, adsets = {}, ads = {}, memo = new Map();
+  function nn(raw) { if (!memo.has(raw)) memo.set(raw, normalizeName_(raw)); return memo.get(raw); }
+  function touch(map, id, name, d, par) {
+    var e = map[id] || (map[id] = { id: id, name: '', nd: '', aliases: [], pd: '' });
+    if (name) {
+      var a = nn(name);
+      if (a && e.aliases.indexOf(a) < 0) e.aliases.push(a);
+      if (d >= e.nd) { e.name = name; e.nd = d; }
+    }
+    if (par && d >= e.pd) { Object.keys(par).forEach(function (k) { if (par[k]) e[k] = par[k]; }); e.pd = d; }
+  }
   (metaRows || []).forEach(function (r) {
-    var day = dateKey_(r.date), o = owner[String(r.campaign_id)];
-    if (!inRange_(day, from, to)) return;
-    var amt = spendInReport_(r, fx, useReport);
-    metaTotal += amt;
-    if (o) { add(o, day, amt); metaTaken += amt; }
+    var d = dateKey_(r.date), cid = String(r.campaign_id || ''), sid = String(r.adset_id || ''), aid = String(r.ad_id || '');
+    if (cid) touch(camps, cid, r.campaign_name, d);
+    if (sid) touch(adsets, sid, r.adset_name, d, { campaignId: cid });
+    if (aid) touch(ads, aid, r.ad_name, d, { adsetId: sid, campaignId: cid });
   });
-  var manual = {};
-  sorted.forEach(function (c) { if (c.spend_source === 'manual') manual[String(c.id)] = true; });
-  (manualRows || []).forEach(function (m) {
-    var a = dateKey_(m.date_from), b = dateKey_(m.date_to);
-    if (!manual[String(m.channel_id)] || !a || !b || b < a) return;
-    var per = num_(m.amount) / daysBetween_(a, b), s = a > from ? a : from, e = b < to ? b : to;
-    for (var d = s; d <= e; d = addDays_(d, 1)) add(String(m.channel_id), d, per);
+  var idx = { camps: camps, adsets: adsets, ads: ads, exact: new Map(), lens: new Map() };
+  function register(level, ent, slots, cur) {
+    if (slots.some(function (s) { return !s.length; })) return;
+    var names = cur.map(nn);
+    if (level !== 'campaign' && (names.some(function (n) { return !n; }) || names.filter(function (n, i) { return names.indexOf(n) === i; }).length < 2)) return; // «промо»: одинаковые названия — ложные совпадения
+    var entry = { ent: ent, slots: slots }, last = slots[slots.length - 1];
+    last.forEach(function (a) {
+      var x = idx.exact.get(a);
+      if (!x) idx.exact.set(a, x = { ad: [], adset: [], campaign: [] });
+      x[level].push(entry);
+      if (a.length >= MIN_SUBSTRING_LEN) {
+        var key = a.slice(0, MIN_SUBSTRING_LEN), l = idx.lens.get(key);
+        if (!l) idx.lens.set(key, l = []);
+        if (l.indexOf(a.length) < 0) { l.push(a.length); l.sort(function (p, q) { return p - q; }); }
+      }
+    });
+  }
+  Object.keys(camps).forEach(function (id) { register('campaign', camps[id], [camps[id].aliases], [camps[id].name]); });
+  Object.keys(adsets).forEach(function (id) {
+    var s = adsets[id], c = camps[s.campaignId];
+    if (c) register('adset', s, [c.aliases, s.aliases], [c.name, s.name]);
   });
-  return { byChannel: byChannel, byDay: byDay, unallocated: metaTotal - metaTaken };
+  Object.keys(ads).forEach(function (id) {
+    var a = ads[id], s = adsets[a.adsetId], c = camps[a.campaignId];
+    if (s && c) register('ad', a, [c.aliases, s.aliases, a.aliases], [c.name, s.name, a.name]);
+  });
+  return idx;
+}
+// Результат привязки до уровня level ('ad'|'adset'|'campaign') с родителями из справочника (сверху вниз согласовано)
+function matchAt_(idx, method, level, id) {
+  var a = null, s = null, c = null;
+  if (level === 'ad') { a = idx.ads[id]; s = idx.adsets[a.adsetId] || null; c = idx.camps[a.campaignId] || null; }
+  else if (level === 'adset') { s = idx.adsets[id]; c = idx.camps[s.campaignId] || null; }
+  else c = idx.camps[id];
+  return {
+    method: method, campaignId: c ? c.id : null, campaignName: c ? c.name : null,
+    adsetId: s ? s.id : null, adsetName: s ? s.name : null, adId: a ? a.id : null, adName: a ? a.name : null
+  };
+}
+// 1) по номеру: цифры от 10 знаков в любой из пяти меток (в т.ч. внутри строки вида «1202…_v2»); объявление → группа → кампания
+function matchById_(lead, idx) {
+  var seqs = [];
+  UTM_FIELDS.forEach(function (f) {
+    (String(lead[f] === null || lead[f] === undefined ? '' : lead[f]).match(/\d+/g) || []).forEach(function (s) { if (s.length >= MIN_ID_LEN) seqs.push(s); });
+  });
+  var levels = [['ad', 'ads'], ['adset', 'adsets'], ['campaign', 'camps']];
+  for (var i = 0; i < levels.length; i++) {
+    for (var j = 0; j < seqs.length; j++) {
+      if (has_(idx[levels[i][1]], seqs[j])) return matchAt_(idx, 'id', levels[i][0], seqs[j]);
+    }
+  }
+  return null;
+}
+// Кандидаты по последнему названию записи: точное совпадение с меткой или вхождение названия в метку.
+// Метка, совпавшая точно, на вхождения не просматривается; остальные просматриваются по 6-знаковым ключам, без перебора справочника
+function candidatesFor_(pool, idx) {
+  var out = { ad: [], adset: [], campaign: [] }, seen = new Set();
+  function addFrom(x) {
+    ['ad', 'adset', 'campaign'].forEach(function (lv) { x[lv].forEach(function (en) { if (!seen.has(en)) { seen.add(en); out[lv].push(en); } }); });
+  }
+  pool.forEach(function (p) {
+    var x = idx.exact.get(p);
+    if (x) { addFrom(x); return; }
+    for (var i = 0; i + MIN_SUBSTRING_LEN <= p.length; i++) {
+      var lens = idx.lens.get(p.substr(i, MIN_SUBSTRING_LEN));
+      if (!lens) continue;
+      for (var k = 0; k < lens.length && i + lens[k] <= p.length; k++) {
+        var y = idx.exact.get(p.substr(i, lens[k]));
+        if (y) addFrom(y);
+      }
+    }
+  });
+  return out;
+}
+// Длина самого длинного названия слота, найденного в метках: точно или (loose) вхождением; 0 — не найдено
+function slotLen_(slot, pool, poolSet, loose) {
+  var best = 0;
+  slot.forEach(function (a) {
+    if (poolSet.has(a) || (loose && a.length >= MIN_SUBSTRING_LEN && pool.some(function (p) { return p.indexOf(a) >= 0; }))) best = Math.max(best, a.length);
+  });
+  return best;
+}
+// Записи, у которых найдены названия всех уровней (кампания, группа, объявление); len — длина найденного названия кампании
+function hitsOf_(entries, pool, poolSet, loose) {
+  var out = [];
+  entries.forEach(function (en) {
+    var first = 0, ok = true;
+    for (var j = 0; j < en.slots.length && ok; j++) {
+      var l = slotLen_(en.slots[j], pool, poolSet, loose);
+      if (!l) ok = false; else if (j === 0) first = l;
+    }
+    if (ok) out.push({ ent: en.ent, len: first });
+  });
+  return out;
+}
+// Несколько кандидатов: объявление → общая группа, иначе общая кампания; группа → общая кампания;
+// кампания → самое длинное найденное название (равные длины — не угадываем)
+function resolveHits_(idx, level, hits) {
+  var ents = hits.map(function (h) { return h.ent; });
+  if (ents.length === 1) return matchAt_(idx, 'names', level, ents[0].id);
+  if (level === 'campaign') {
+    var s = hits.slice().sort(function (p, q) { return q.len - p.len; });
+    return s[0].len > s[1].len ? matchAt_(idx, 'names', 'campaign', s[0].ent.id) : null;
+  }
+  var same = function (key) { return ents[0][key] && ents.every(function (e) { return e[key] === ents[0][key]; }); };
+  if (level === 'ad' && same('adsetId')) return matchAt_(idx, 'names', 'adset', ents[0].adsetId);
+  if (same('campaignId')) return matchAt_(idx, 'names', 'campaign', ents[0].campaignId);
+  return null;
+}
+// 2) по названию: сначала точное совпадение всех названий, затем вхождение; уровни ad → adset → campaign, первый, где что-то нашлось
+function matchByNames_(pool, idx) {
+  if (!pool.length) return null;
+  var poolSet = new Set(pool), c = candidatesFor_(pool, idx), levels = ['ad', 'adset', 'campaign'];
+  for (var i = 0; i < levels.length; i++) {
+    for (var p = 0; p < 2; p++) {
+      var hits = hitsOf_(c[levels[i]], pool, poolSet, p === 1);
+      if (hits.length) return resolveHits_(idx, levels[i], hits);
+    }
+  }
+  return null;
+}
+// memo — Map в пределах одного расчёта: одинаковый набор из пяти меток привязывается один раз
+function matchLead_(lead, idx, memo) {
+  var key = memo ? UTM_FIELDS.map(function (f) { return lead[f] === null || lead[f] === undefined ? '' : String(lead[f]); }).join('\u0001') : null;
+  if (memo && memo.has(key)) return memo.get(key);
+  var m = matchById_(lead, idx) || matchByNames_(utmPoolOf_(lead), idx) || NO_MATCH;
+  if (memo) memo.set(key, m);
+  return m;
 }
 
 // ───────── Метрики ─────────
 function computeMetrics_(a) {
   return {
-    cpl: ratio_(a.spend, a.leads), costPerQualified: ratio_(a.spend, a.qualified), costPerSale: ratio_(a.spend, a.sales),
+    // цена при нулевом расходе — не 0, а «нет данных» (как romi и roas)
+    cpl: a.spend > 0 ? ratio_(a.spend, a.leads) : null, costPerQualified: a.spend > 0 ? ratio_(a.spend, a.qualified) : null, costPerSale: a.spend > 0 ? ratio_(a.spend, a.sales) : null,
     qualRate: a.leads > 0 ? round2_(100 * a.qualified / a.leads) : null, // % от заявок
     closeRate: a.qualified > 0 ? round2_(100 * a.sales / a.qualified) : null, // % от квал-заявок
     romiPct: a.spend > 0 ? round2_(100 * (a.revenue - a.spend) / a.spend) : null,
     roas: ratio_(a.revenue, a.spend)
   };
 }
-var KPI_KEYS = ['spend', 'unallocatedSpend', 'leads', 'qualified', 'sales', 'revenue', 'cpl', 'costPerQualified', 'costPerSale', 'qualRate', 'closeRate', 'romiPct', 'roas'];
-// Нет данных за период → все поля null, а не 0
+// Метрики строки. spend/impressions/clicks = null у строки «не определено» (расход к ней не относится) → все зависящие от них метрики null
+function rowMetrics_(a) {
+  var noSpend = a.spend === null, m = computeMetrics_({ spend: noSpend ? 0 : a.spend, leads: a.leads, qualified: a.qualified, sales: a.sales, revenue: a.revenue });
+  if (noSpend) { m.cpl = null; m.costPerQualified = null; m.costPerSale = null; m.romiPct = null; m.roas = null; }
+  return {
+    spend: noSpend ? null : round2_(a.spend), impressions: a.impressions, clicks: a.clicks,
+    ctr: a.impressions > 0 && a.clicks !== null ? round2_(100 * a.clicks / a.impressions) : null,
+    cpc: a.clicks > 0 && !noSpend ? round2_(a.spend / a.clicks) : null,
+    leads: a.leads, qualified: a.qualified, sales: a.sales, revenue: round2_(a.revenue),
+    cpl: m.cpl, costPerQualified: m.costPerQualified, costPerSale: m.costPerSale, qualRate: m.qualRate, closeRate: m.closeRate, romiPct: m.romiPct, roas: m.roas
+  };
+}
+var KPI_KEYS = ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'leads', 'qualified', 'sales', 'revenue', 'cpl', 'costPerQualified', 'costPerSale',
+  'qualRate', 'closeRate', 'romiPct', 'roas', 'leadsAll', 'leadsUnattributed', 'matchRatePct'];
+// t: суммы периода (spend, impressions, clicks весь кабинет; leads… только привязанные; all — все заявки). Нет данных → все поля null
 function kpisOf_(t, empty) {
   var out = {};
   if (empty) { KPI_KEYS.forEach(function (k) { out[k] = null; }); return out; }
-  var m = computeMetrics_(t);
-  out.spend = round2_(t.spend); out.unallocatedSpend = round2_(Math.max(t.unallocated, 0)); out.leads = t.leads; out.qualified = t.qualified; out.sales = t.sales; out.revenue = round2_(t.revenue);
-  ['cpl', 'costPerQualified', 'costPerSale', 'qualRate', 'closeRate', 'romiPct', 'roas'].forEach(function (k) { out[k] = m[k]; });
+  var m = rowMetrics_(t);
+  KPI_KEYS.forEach(function (k) { if (has_(m, k)) out[k] = m[k]; });
+  out.leadsAll = t.all; out.leadsUnattributed = t.all - t.leads; out.matchRatePct = t.all > 0 ? round2_(100 * t.leads / t.all) : null;
   return out;
 }
 
@@ -344,28 +448,6 @@ function addAgg_(a, d) {
   a.leads++;
   if (d.f.qualified) a.qualified++;
   if (d.f.sold) { a.sales++; a.revenue += d.amount; }
-}
-function sumSpend_(byChannel) {
-  return Object.keys(byChannel).reduce(function (s, k) { return s + byChannel[k]; }, 0);
-}
-
-// Дерево меток: source → medium → campaign → content → term (без учёта регистра и пробелов по краям)
-function addToTree_(root, d) {
-  var node = root;
-  TREE_LEVELS.forEach(function (level) {
-    var raw = String(d.row[level] === null || d.row[level] === undefined ? '' : d.row[level]).trim(), k = 'k:' + raw.toLowerCase();
-    if (!has_(node.kids, k)) { node.kids[k] = { level: level, value: raw, agg: newAgg_(), kids: {}, order: [] }; node.order.push(k); }
-    node = node.kids[k];
-    addAgg_(node.agg, d);
-  });
-}
-// Корень и узлы: kids (объект по ключу) и order (порядок появления)
-function finishTree_(node) {
-  return node.order.map(function (k) { return node.kids[k]; }).map(function (n) {
-    var m = computeMetrics_({ spend: 0, leads: n.agg.leads, qualified: n.agg.qualified, sales: n.agg.sales, revenue: n.agg.revenue });
-    return { level: n.level, value: n.value, leads: n.agg.leads, qualified: n.agg.qualified, sales: n.agg.sales, revenue: round2_(n.agg.revenue),
-      qualRate: m.qualRate, closeRate: m.closeRate, children: finishTree_(n) };
-  }).sort(function (a, b) { return b.leads - a.leads || (a.value < b.value ? -1 : a.value > b.value ? 1 : 0); });
 }
 
 function leadUrlOf_(row, cfg) {
@@ -378,10 +460,10 @@ function leadUrlOf_(row, cfg) {
   return null;
 }
 
-var MAX_LEADS_OUT = 2000;
+var MAX_LEADS_OUT = 2000, MAX_TABLE_ROWS = 1000, MAX_UTM_OUT = 120;
 
-// rows: {channels, spendManual, metaSpend, leads} — строки листов; params: {from, to}; today — 'YYYY-MM-DD' в поясе отчёта
-// (считает Config.gs через Utilities.formatDate); учитываются только заявки текущей CRM (crm_type); → data по контракту SPEC
+// rows: {metaAds, leads} — строки листов; params: {from, to}; today — 'YYYY-MM-DD' в поясе отчёта (считает Config.gs);
+// учитываются только заявки текущей CRM (crm_type); → data по контракту SPEC
 function buildDashboardData_(rows, params, cfg, today, nowMs) {
   params = params || {};
   var now = nowMs || Date.now();
@@ -389,76 +471,101 @@ function buildDashboardData_(rows, params, cfg, today, nowMs) {
   var from = dateKey_(params.from) || addDays_(to, -(num_(cfg.dashboard_default_days) || 30) + 1);
   if (from > to) from = to;
   var len = daysBetween_(from, to), prevTo = addDays_(from, -1), prevFrom = addDays_(prevTo, -(len - 1));
-  var fx = metaFx_(cfg), channels = rows.channels || [];
-  var compiled = compileChannels_(channels);
+  var fx = metaFx_(cfg), useReport = cfg.fx_source === 'nbk' && cfg.meta_currency !== cfg.currency;
+  var meta = rows.metaAds || [], idx = buildAdIndex_(meta), matchMemo = new Map();
 
-  var useReport = cfg.fx_source === 'nbk' && cfg.meta_currency !== cfg.currency;
-  var spendCur = channelSpend_(channels, rows.metaSpend, rows.spendManual, from, to, fx, useReport);
-  var spendPrev = channelSpend_(channels, rows.metaSpend, rows.spendManual, prevFrom, prevTo, fx, useReport);
-
-  // заявки обоих периодов, один раз с каналом и флагами
   var cur = [], prev = [];
   (rows.leads || []).forEach(function (row) {
     if (row.crm_type !== cfg.crm_type) return; // остатки прежней CRM не считаем
     var key = dateKey_(row.created_at), inCur = inRange_(key, from, to), inPrev = inRange_(key, prevFrom, prevTo);
     if (!inCur && !inPrev) return;
-    var d = { row: row, key: key, ch: assignChannel_(row, compiled), f: leadFlags_(row, cfg), amount: num_(row.amount) };
-    (inCur ? cur : prev).push(d);
+    (inCur ? cur : prev).push({ row: row, key: key, m: matchLead_(row, idx, matchMemo), f: leadFlags_(row, cfg), amount: num_(row.amount) });
   });
+  var metaCur = meta.filter(function (r) { return inRange_(dateKey_(r.date), from, to); });
+  var metaPrev = meta.filter(function (r) { return inRange_(dateKey_(r.date), prevFrom, prevTo); });
 
-  function totals(list, sp) {
-    var t = newAgg_();
-    list.forEach(function (d) { addAgg_(t, d); });
-    t.spend = sumSpend_(sp.byChannel); t.unallocated = sp.unallocated;
+  function totals(metaList, list) {
+    var t = { spend: 0, impressions: 0, clicks: 0, leads: 0, qualified: 0, sales: 0, revenue: 0, all: list.length };
+    metaList.forEach(function (r) { t.spend += spendInReport_(r, fx, useReport); t.impressions += num_(r.impressions); t.clicks += num_(r.clicks); });
+    list.forEach(function (d) { if (d.m.method !== 'none') addAgg_(t, d); });
     return t;
   }
-  function isEmpty(t) { return t.leads === 0 && t.spend === 0 && t.unallocated < 0.005; }
-  var tCur = totals(cur, spendCur), tPrev = totals(prev, spendPrev);
+  function isEmpty(t) { return t.all === 0 && t.spend === 0 && t.impressions === 0 && t.clicks === 0; }
+  var tCur = totals(metaCur, cur), tPrev = totals(metaPrev, prev);
   var kpis = kpisOf_(tCur, isEmpty(tCur));
   kpis.prev = kpisOf_(tPrev, isEmpty(tPrev));
 
   var perDay = {};
-  cur.forEach(function (d) { addAgg_(perDay[d.key] = perDay[d.key] || newAgg_(), d); });
+  function dayOf(k) { return perDay[k] || (perDay[k] = { spend: 0, a: newAgg_() }); }
+  metaCur.forEach(function (r) { dayOf(dateKey_(r.date)).spend += spendInReport_(r, fx, useReport); });
+  cur.forEach(function (d) { if (d.m.method !== 'none') addAgg_(dayOf(d.key).a, d); });
   var daily = [];
   for (var day = from; day <= to; day = addDays_(day, 1)) {
-    var a = perDay[day] || newAgg_();
-    daily.push({ date: day, spend: round2_(spendCur.byDay[day] || 0), leads: a.leads, qualified: a.qualified, sales: a.sales, revenue: round2_(a.revenue) });
+    var x = dayOf(day);
+    daily.push({ date: day, spend: round2_(x.spend), leads: x.a.leads, qualified: x.a.qualified, sales: x.a.sales, revenue: round2_(x.a.revenue) });
   }
 
-  // каналы: все из справочника + системные, если в них есть заявки
-  var chMap = {}, chOrder = [];
-  function chEntry(id, name, source) {
-    if (!has_(chMap, id)) { chMap[id] = { id: id, name: name, spendSource: source, agg: newAgg_(), tree: { kids: {}, order: [] } }; chOrder.push(id); }
-    return chMap[id];
+  // кампании / группы / объявления: расход Meta за период + привязанные заявки. Заявка, привязанная не до самого низа,
+  // идёт в строку «не определено» (id: null, расход null) под своим родителем
+  var maps = { camps: {}, sets: {}, ads: {} };
+  function row(map, key, init) {
+    if (!has_(map, key)) { var o = newAgg_(); Object.keys(init).forEach(function (k) { o[k] = init[k]; }); map[key] = o; }
+    return map[key];
   }
-  sortChannels_(channels).forEach(function (c) { chEntry(String(c.id), c.name, c.spend_source || 'none'); });
-  cur.forEach(function (d) {
-    var e = chEntry(d.ch.id, d.ch.name, 'none');
-    addAgg_(e.agg, d);
-    addToTree_(e.tree, d);
+  function nm(entity, id) { return entity[id] ? entity[id].name : null; }
+  function campParent(cid) { return { campaignId: cid || null, campaignName: cid ? nm(idx.camps, cid) : null }; }
+  function setParent(sid) { var s = idx.adsets[sid]; return Object.assign({ adsetId: sid || null, adsetName: sid ? nm(idx.adsets, sid) : null }, campParent(s ? s.campaignId : null)); }
+  function real(spendless) { return spendless ? { spend: null, impressions: null, clicks: null } : { spend: 0, impressions: 0, clicks: 0 }; }
+  function addMeta(o, r) { o.spend += spendInReport_(r, fx, useReport); o.impressions += num_(r.impressions); o.clicks += num_(r.clicks); }
+  metaCur.forEach(function (r) {
+    var cid = String(r.campaign_id || ''), sid = String(r.adset_id || ''), aid = String(r.ad_id || '');
+    if (cid) addMeta(row(maps.camps, cid, Object.assign({ id: cid, name: nm(idx.camps, cid) }, real(false))), r);
+    if (sid) addMeta(row(maps.sets, sid, Object.assign({ id: sid, name: nm(idx.adsets, sid) }, campParent(idx.adsets[sid].campaignId), real(false))), r);
+    if (aid) addMeta(row(maps.ads, aid, Object.assign({ id: aid, name: nm(idx.ads, aid) }, setParent(idx.ads[aid].adsetId), real(false))), r);
   });
-  var chOut = chOrder.map(function (id) {
-    var e = chMap[id], spend = round2_(spendCur.byChannel[id] || 0);
-    var m = computeMetrics_({ spend: spend, leads: e.agg.leads, qualified: e.agg.qualified, sales: e.agg.sales, revenue: e.agg.revenue });
-    return { id: e.id, name: e.name, spendSource: e.spendSource, spend: spend, leads: e.agg.leads, qualified: e.agg.qualified, sales: e.agg.sales,
-      revenue: round2_(e.agg.revenue), cpl: m.cpl, costPerQualified: m.costPerQualified, costPerSale: m.costPerSale, qualRate: m.qualRate,
-      closeRate: m.closeRate, romiPct: m.romiPct, roas: m.roas, children: finishTree_(e.tree) };
-  }).sort(function (x, y) { return y.spend - x.spend || y.leads - x.leads; });
+  cur.forEach(function (d) {
+    var m = d.m;
+    if (m.method === 'none') return;
+    var cid = m.campaignId, sid = m.adsetId, aid = m.adId;
+    if (cid) addAgg_(row(maps.camps, cid, Object.assign({ id: cid, name: m.campaignName }, real(false))), d);
+    if (sid) addAgg_(row(maps.sets, sid, Object.assign({ id: sid, name: m.adsetName }, campParent(cid), real(false))), d);
+    else addAgg_(row(maps.sets, 'n|' + cid, Object.assign({ id: null, name: null }, campParent(cid), real(true))), d);
+    if (aid) addAgg_(row(maps.ads, aid, Object.assign({ id: aid, name: m.adName }, setParent(sid), real(false))), d);
+    else if (sid) addAgg_(row(maps.ads, 'n|' + sid, Object.assign({ id: null, name: null }, setParent(sid), real(true))), d);
+    else addAgg_(row(maps.ads, 'n|c|' + cid, Object.assign({ id: null, name: null, adsetId: null, adsetName: null }, campParent(cid), real(true))), d);
+  });
+  var truncated = {};
+  function finish(name, map, parentKeys) {
+    var all = Object.keys(map).map(function (k) { return map[k]; }).filter(function (o) {
+      return o.leads > 0 || o.spend > 0 || o.impressions > 0 || o.clicks > 0;
+    }).map(function (o) {
+      var out = { id: o.id, name: o.name };
+      parentKeys.forEach(function (p) { out[p] = o[p]; });
+      return Object.assign(out, rowMetrics_(o));
+    }).sort(function (a, b) {
+      return (b.spend === null ? -1 : b.spend) - (a.spend === null ? -1 : a.spend) || b.leads - a.leads || (String(a.name) < String(b.name) ? -1 : 1);
+    });
+    truncated[name] = all.length > MAX_TABLE_ROWS; // ответ ограничен: в списке первые MAX_TABLE_ROWS по расходу, затем по заявкам
+    return all.slice(0, MAX_TABLE_ROWS);
+  }
 
-  var leads = cur.slice().sort(function (x, y) {
-    return x.row.created_at < y.row.created_at ? 1 : (x.row.created_at > y.row.created_at ? -1 : 0);
+  function utmOut(v) { return String(v === null || v === undefined ? '' : v).slice(0, MAX_UTM_OUT); } // в листе до 200 знаков, в ответе до 120
+  var leads = cur.slice().sort(function (p, q) {
+    return p.row.created_at < q.row.created_at ? 1 : (p.row.created_at > q.row.created_at ? -1 : 0);
   }).slice(0, MAX_LEADS_OUT).map(function (d) {
     var r = d.row;
     return {
-      crmId: String(r.crm_id), url: leadUrlOf_(r, cfg), createdAt: r.created_at, channelId: d.ch.id, channelName: d.ch.name,
-      utm: { source: r.utm_source || '', medium: r.utm_medium || '', campaign: r.utm_campaign || '', content: r.utm_content || '', term: r.utm_term || '' },
-      stageName: r.stage_name || '', status: d.f.status, qualified: d.f.qualified, sold: d.f.sold, amount: round2_(d.amount)
+      crmId: String(r.crm_id), url: leadUrlOf_(r, cfg), createdAt: r.created_at,
+      utm: { source: utmOut(r.utm_source), medium: utmOut(r.utm_medium), campaign: utmOut(r.utm_campaign), content: utmOut(r.utm_content), term: utmOut(r.utm_term) },
+      match: d.m, stageName: r.stage_name || '', status: d.f.status, qualified: d.f.qualified, sold: d.f.sold, amount: round2_(d.amount)
     };
   });
 
+  var campaigns = finish('campaigns', maps.camps, []), adsets = finish('adsets', maps.sets, ['campaignId', 'campaignName']);
+  var adsOut = finish('ads', maps.ads, ['adsetId', 'adsetName', 'campaignId', 'campaignName']);
   return {
-    meta: { client: cfg.client_name, currency: cfg.currency, from: from, to: to, prevFrom: prevFrom, prevTo: prevTo, generatedAt: new Date(now).toISOString(), syncedAt: null, role: null },
-    kpis: kpis, daily: daily, channels: chOut, leads: leads, leadsTotal: cur.length
+    meta: { client: cfg.client_name, currency: cfg.currency, from: from, to: to, prevFrom: prevFrom, prevTo: prevTo, generatedAt: new Date(now).toISOString(), syncedAt: null, role: null, truncated: truncated },
+    kpis: kpis, daily: daily, campaigns: campaigns, adsets: adsets, ads: adsOut, leads: leads, leadsTotal: cur.length
   };
 }
 
@@ -554,69 +661,7 @@ function bitrixWebhookOk_(url) {
 // Ссылка пагинации Meta принимается только на graph.facebook.com
 function graphNextOk_(url) { return typeof url === 'string' && url.indexOf('https://graph.facebook.com/') === 0; }
 
-var MAX_CHANNELS = 200, MAX_SPEND_ROWS = 2000, MAX_LOGO_BYTES = 300 * 1024;
-var SPEND_SOURCES = ['meta', 'manual', 'none'];
-function idOf_(v, genId, seen) {
-  var id;
-  if (v === undefined || v === null || v === '') {
-    do { id = genId(); } while (seen[id]);
-  } else {
-    if (typeof v !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$/.test(v)) return null; // «_…» зарезервировано под системные каналы
-    id = v;
-  }
-  if (seen[id]) return null;
-  seen[id] = true;
-  return id;
-}
-// Полная замена справочника. genId() — генератор id для новых строк
-function validateChannels_(list, genId) {
-  if (!Array.isArray(list) || list.length > MAX_CHANNELS) return bad_();
-  var seen = {}, out = [];
-  for (var i = 0; i < list.length; i++) {
-    var c = list[i];
-    if (!isPlainObject_(c)) return bad_();
-    var row = { name: textOf_(c.name, 80, true) };
-    if (row.name === null) return bad_();
-    for (var j = 0; j < UTM_FIELDS.length; j++) {
-      var p = c[UTM_FIELDS[j]] === undefined || c[UTM_FIELDS[j]] === null ? '' : textOf_(c[UTM_FIELDS[j]], 100, false);
-      if (p === null || p.split('*').length > 6) return bad_();
-      row[UTM_FIELDS[j]] = p;
-    }
-    row.spend_source = c.spend_source === undefined || c.spend_source === null || c.spend_source === '' ? 'none' : c.spend_source;
-    if (SPEND_SOURCES.indexOf(row.spend_source) < 0) return bad_();
-    row.meta_filter = c.meta_filter === undefined || c.meta_filter === null ? '' : textOf_(c.meta_filter, 100, false);
-    if (row.meta_filter === null) return bad_();
-    if (c.sort === undefined || c.sort === null || c.sort === '') row.sort = (i + 1) * 10;
-    else {
-      var s = typeof c.sort === 'number' ? c.sort : (typeof c.sort === 'string' && /^-?\d{1,7}$/.test(c.sort.trim()) ? +c.sort : NaN);
-      if (!isFinite(s) || Math.abs(s) > 1000000) return bad_();
-      row.sort = Math.round(s);
-    }
-    row.id = idOf_(c.id, genId, seen);
-    if (row.id === null) return bad_();
-    out.push(row);
-  }
-  return good_(out);
-}
-// Полная замена ручного расхода. channelIds — {id: true} существующих каналов
-function validateSpend_(list, channelIds, genId) {
-  if (!Array.isArray(list) || list.length > MAX_SPEND_ROWS) return bad_();
-  var seen = {}, out = [];
-  for (var i = 0; i < list.length; i++) {
-    var r = list[i];
-    if (!isPlainObject_(r)) return bad_();
-    if (typeof r.channel_id !== 'string' || !has_(channelIds, r.channel_id)) return bad_();
-    if (!isRealDate_(r.date_from) || !isRealDate_(r.date_to) || r.date_to < r.date_from || daysBetween_(r.date_from, r.date_to) > 3660) return bad_();
-    var amount = typeof r.amount === 'number' ? r.amount : (typeof r.amount === 'string' && r.amount.trim() !== '' ? Number(r.amount.replace(/\s/g, '').replace(',', '.')) : NaN);
-    if (!isFinite(amount) || amount < 0 || amount > 1e12) return bad_();
-    var comment = r.comment === undefined || r.comment === null ? '' : textOf_(r.comment, 200, false);
-    if (comment === null) return bad_();
-    var id = idOf_(r.id, genId, seen);
-    if (id === null) return bad_();
-    out.push({ id: id, channel_id: r.channel_id, date_from: r.date_from, date_to: r.date_to, amount: round2_(amount), comment: comment });
-  }
-  return good_(out);
-}
+var MAX_LOGO_BYTES = 300 * 1024;
 // '' = удалить логотип
 function validateLogo_(dataUrl) {
   if (typeof dataUrl !== 'string') return bad_();

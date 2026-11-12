@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- frame-ancestors через meta не работает: задаётся только HTTP-заголовком, у GitHub Pages его нет; защита от встраивания — проверка window.top в скриптах -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dDt3Khzi74w6qNIH6MTyLa3GYQKbCPjvkg18MjTxFkI=' 'sha256-VOdltWT17RBMbp74jb1y598jXv2Hftx4cDbBaq8Nlos='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dDt3Khzi74w6qNIH6MTyLa3GYQKbCPjvkg18MjTxFkI=' 'sha256-OiYTYIxAkTUPyjYMZ6wil/W8c/r11zpl6qQ5K9yOZmk='; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'">
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UTM Аналитика</title>
@@ -448,20 +448,10 @@ button.ava:hover{transform:translateY(-1px)}
 .sbox .card-h h3 .chip{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:var(--lav);color:var(--violet)}
 .acts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px}
 .acts .grow{flex:1}
-.acts .dirty{font-size:13px;color:var(--accent-ink);font-weight:600}
 .sec-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sec-r .tin{flex:1 1 220px;width:auto}
-.rule{padding:16px;border-radius:18px;border:1px solid var(--line);background:var(--raise-mut);margin-bottom:12px}
-.rule-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.rule-h b{flex:1;font-size:15px}
-.ib2{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--fill);color:var(--text-2);transition:background .2s,color .2s}
-.ib2:hover:not(:disabled){background:var(--lav);color:var(--accent-ink)}
-.ib2:disabled{opacity:.35;cursor:default}
-.ib2.danger:hover:not(:disabled){background:var(--down-bg);color:var(--down)}
-.g5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-.g5 .fld,.grid2 .fld,.g3 .fld{margin-bottom:0}
+.grid2 .fld{margin-bottom:0}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 18px;margin-bottom:14px}
-.g3{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px}
 .bn{display:flex;gap:12px;align-items:flex-start;margin:0 0 16px;padding:13px 16px;border-radius:18px;font-size:14px;line-height:1.45;background:var(--lav)}
 .bn svg{margin-top:1px;color:var(--violet)}
 .bn code{font-size:13px;background:var(--card);padding:1px 6px;border-radius:6px}
@@ -480,29 +470,34 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 .sy-card.ok .sy-bar i::after,.sy-card.err .sy-bar i::after{display:none}
 .sy-card.err .sy-bar i{background:var(--down)}.sy-card.err .sy-row b,.sy-card.err .sy-pct{color:var(--down)}
 
-/* каналы: таблица */
+/* реклама: таблица (кампании · группы · объявления) */
 .tscroll{overflow-x:auto}
-.t3in{min-width:740px}
-.t3in .thead,.t3in .tr{grid-template-columns:minmax(170px,2fr) repeat(7,minmax(66px,1fr));gap:6px;padding:0 14px;display:grid;align-items:center}
-.t3in .tr{min-height:60px;font-size:14px;cursor:default;animation:none}
-.t3in .tr.has{cursor:pointer}
-.t3in .tr.sub{background:var(--hover-row);min-height:52px}
-.t3in .r{text-align:right;white-space:nowrap}
-.t3in .dim{color:var(--muted-2)}
-.t3in .cr{gap:8px}
-.t3in .cr .nm{min-width:0}
-.chv{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;background:var(--fill);color:var(--text-3);flex:none;transition:transform .25s var(--ease),background .2s}
-.chv svg{width:15px;height:15px}
-.chv.ph{background:none}
-.tr[aria-expanded="true"] .chv{transform:rotate(90deg);background:var(--lav);color:var(--accent-ink)}
+.adt{min-width:1000px}
+.adt .thead,.adt .tr{grid-template-columns:minmax(220px,2.4fr) repeat(10,minmax(74px,1fr));gap:6px;padding:0 14px;display:grid;align-items:center}
+.adt .tr{min-height:60px;font-size:14px;cursor:default;animation:none}
+.adt .r{text-align:right;white-space:nowrap}
+.adt .dim{color:var(--muted-2)}
+.adt .cr{gap:8px}
+.adt .cr .nm{min-width:0}
+.adt .thead button{font:inherit;text-transform:inherit;letter-spacing:inherit;color:inherit;text-align:right;padding:6px 0;border-radius:8px;white-space:normal;line-height:1.2;font-size:11.5px}
+.adt .thead button:hover,.adt .thead button.on{color:var(--accent-ink)}
+.adt .cr small{overflow:hidden;text-overflow:ellipsis}
+.adt .cr>span:last-child{overflow:hidden}
+.cr .lnk{display:block;max-width:100%;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:6px}
+.cr .lnk:hover{color:var(--accent-ink);text-decoration:underline;text-underline-offset:3px}
+.chips{gap:8px}
+.chips .tg{max-width:100%;min-width:0;gap:6px;padding:6px 8px 6px 12px;font-size:13px;transition:background .2s}
+.chips .tg span{overflow:hidden;text-overflow:ellipsis}
+.chips .tg svg{width:14px;height:14px}
+.chips .tg:hover{background:var(--lav-2)}
+.chips .ghostbtn{padding:6px 12px;font-size:13.5px}
 .cr{display:flex;align-items:center;min-width:0}
 .cr .nm{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cr small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;white-space:nowrap}
 .cr>span:last-child{min-width:0}
-.sub .cr .nm{font-weight:400}
 
 /* заявки: список */
-.lt-h,.lr{display:grid;grid-template-columns:112px minmax(110px,1fr) minmax(150px,1.6fr) minmax(110px,1fr) 104px 100px 84px;align-items:center;gap:10px;padding:0 18px}
+.lt-h,.lr{display:grid;grid-template-columns:100px minmax(130px,1.5fr) minmax(90px,1.2fr) minmax(96px,1fr) 80px 84px 70px;align-items:center;gap:8px;padding:0 14px}
 .lr{position:relative;min-height:62px;font-size:14px;animation:rise .45s var(--ease) both}
 .lr>span{min-width:0}
 .lr .ut{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
@@ -521,6 +516,9 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 .dw-lead h4{margin:24px 0 10px;font-size:13px}
 .dw-lead .dw-h{margin-bottom:8px}
 .drawer .kv{margin-top:6px}
+.tbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.tbar .grow{flex:1}
+.tbar[hidden]{display:none}
 .tbar>.dd{min-width:0}
 
 /* адаптив */
@@ -561,7 +559,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
   .lt-h{display:none}
   .lr{grid-template-columns:1fr auto;grid-template-areas:"dt crm" "ch am" "ut ut" "st sb";gap:6px 10px;padding:12px 14px}
   .lr>:nth-child(1){grid-area:dt}.lr>:nth-child(2){grid-area:ch}.lr>:nth-child(3){grid-area:ut}.lr>:nth-child(4){grid-area:st}.lr>:nth-child(5){grid-area:sb}.lr>:nth-child(6){grid-area:am}.lr>:nth-child(7){grid-area:crm;justify-self:end}
-  .g5,.grid2,.g3{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
   .logo-prev{flex-wrap:wrap}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rise{opacity:1;transform:none}}
@@ -571,19 +569,17 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 .tin[aria-invalid="true"],.sel[aria-invalid="true"]{border-color:var(--down)}
 .fl{font-size:13px;color:var(--muted)}
 .bn.warn{background:var(--lav)}
-.t3in .thead .r{white-space:normal;line-height:1.2;font-size:11.5px}
 /* первая колонка закреплена при горизонтальной прокрутке: фон как у строки, в обеих темах */
-.t3in .thead>:first-child,.t3in .tr>:first-child{position:sticky;left:0;z-index:1;align-self:stretch;display:flex;align-items:center;margin-left:-14px;padding-left:14px;background:var(--card)}
-.t3in .thead>:first-child{background:var(--pane-2)}
-.t3in .tr.sub>:first-child,.t3in .tr:hover>:first-child{background:var(--hover-row)}
+.adt .thead>:first-child,.adt .tr>:first-child{position:sticky;left:0;z-index:1;align-self:stretch;display:flex;align-items:center;margin-left:-14px;padding-left:14px;background:var(--card)}
+.adt .thead>:first-child{background:var(--pane-2)}
+.adt .tr:hover>:first-child{background:var(--hover-row)}
 @media (max-width:760px){
-  .t3in{min-width:100%;width:max-content}
-  .t3in .thead,.t3in .tr{grid-template-columns:150px repeat(7,96px)}
-  .t3in .thead>:first-child,.t3in .tr>:first-child{box-shadow:8px 0 8px -8px rgba(0,0,0,.25)}
+  .adt{min-width:100%;width:max-content}
+  .adt .thead,.adt .tr{grid-template-columns:150px repeat(10,92px)}
+  .adt .thead>:first-child,.adt .tr>:first-child{box-shadow:8px 0 8px -8px rgba(0,0,0,.25)}
 }
 
 .lg-id{margin:-12px 0 18px;text-align:center}.lg-id .hintk{color:var(--muted);margin-top:2px}
-.rule.bad{border-color:var(--down);background:var(--down-bg)}
 </style>
 </head>
 <body>
@@ -618,7 +614,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     <div class="logo" id="railLogo" aria-hidden="true"></div>
     <div class="sep"></div>
     <button class="rb on" data-view="overview" title="Обзор" aria-label="Обзор" data-ico="grid"></button>
-    <button class="rb" data-view="channels" title="Каналы" aria-label="Каналы" data-ico="funnel"></button>
+    <button class="rb" data-view="ads" title="Реклама" aria-label="Реклама" data-ico="mega"></button>
     <button class="rb" data-view="leads" title="Заявки" aria-label="Заявки" data-ico="list"></button>
     <button class="rb" data-view="settings" data-admin title="Настройки" aria-label="Настройки" data-ico="sliders" hidden></button>
     <div class="grow"></div>
@@ -632,7 +628,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       <h1 id="sideName">UTM Аналитика</h1>
     </div>
     <button class="nv on" data-view="overview"><span data-ico="grid"></span><span>Обзор</span></button>
-    <button class="nv" data-view="channels"><span data-ico="funnel"></span><span>Каналы</span></button>
+    <button class="nv" data-view="ads"><span data-ico="mega"></span><span>Реклама</span></button>
     <button class="nv" data-view="leads"><span data-ico="list"></span><span>Заявки</span><b class="badge" id="nvLeads">—</b></button>
     <button class="nv" data-view="settings" data-admin hidden><span data-ico="sliders"></span><span>Настройки</span></button>
     <div class="grow"></div>
@@ -693,23 +689,17 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       </section>
     </div>
 
-    <div class="content view" id="v-channels" hidden>
+    <div class="content view" id="v-ads" hidden>
       <section>
-        <div class="sh"><h2>Каналы</h2><span class="hint">нажми на строку, чтобы раскрыть метки: source → medium → campaign → content → term</span></div>
-        <div class="bn" id="unCh" hidden></div>
-        <div class="tbl tscroll" role="treegrid" aria-label="Каналы">
-          <div class="t3in">
-            <div class="thead" role="row"><span>Канал</span><span class="r">Расход</span><span class="r">Заявки</span><span class="r">Квалы</span><span class="r">Продажи</span><span class="r">Выручка</span><span class="r">Цена заявки</span><span class="r">ROMI</span></div>
-            <div id="chRows"></div>
-          </div>
-        </div>
+        <div class="sh"><h2>Реклама</h2><span class="hint" id="adsHint"></span></div>
+        <div id="adsBox"></div>
       </section>
     </div>
 
     <div class="content view" id="v-leads" hidden>
       <section>
         <div class="sh"><h2>Заявки</h2><span class="hint" id="leadsHint"></span></div>
-        <div class="tbar"><div id="ddCh"></div><div id="ddSt"></div></div>
+        <div class="tbar"><div id="ddMa"></div><div id="ddSt"></div><div id="ddCa"></div></div>
         <div id="leadsBox"></div>
       </section>
     </div>
@@ -722,9 +712,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
             <span class="knob"></span>
             <button role="tab" aria-selected="true" data-s="conn"><span class="ck" data-ico="check"></span>Подключения</button>
             <button role="tab" aria-selected="false" data-s="qual"><span class="ck" data-ico="check"></span>Квалификация и продажа</button>
-            <button role="tab" aria-selected="false" data-s="chan"><span class="ck" data-ico="check"></span>Каналы</button>
-            <button role="tab" aria-selected="false" data-s="spend"><span class="ck" data-ico="check"></span>Ручной расход</button>
-            <button role="tab" aria-selected="false" data-s="acc"><span class="ck" data-ico="check"></span>Доступ</button>
+                        <button role="tab" aria-selected="false" data-s="acc"><span class="ck" data-ico="check"></span>Доступ</button>
             <button role="tab" aria-selected="false" data-s="look"><span class="ck" data-ico="check"></span>Оформление</button>
             <button role="tab" aria-selected="false" data-s="sync"><span class="ck" data-ico="check"></span>Синк</button>
           </div>
@@ -736,7 +724,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 </div>
 <nav class="mnav" id="mnav" aria-label="Разделы" hidden>
   <button data-view="overview"><span data-ico="grid"></span>Обзор</button>
-  <button data-view="channels"><span data-ico="funnel"></span>Каналы</button>
+  <button data-view="ads"><span data-ico="mega"></span>Реклама</button>
   <button data-view="leads"><span data-ico="list"></span>Заявки</button>
   <button data-view="settings" data-admin hidden><span data-ico="sliders"></span>Настройки</button>
 </nav>
@@ -866,7 +854,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 
   // ---------- состояние ----------
   var S = { token: '', role: '', view: 'overview', per: { days: 30 }, data: null, metric: 'money', active: -1, seq: 0,
-    open: {}, lf: { ch: 'all', st: 'all', n: 30 }, rows: [], set: null, edit: null, tab: 'conn', boot: null, empty: false };
+    ads: { lvl: 'camps', camp: null, set: null, sort: 'spend', dir: -1 }, lf: { ma: 'all', st: 'all', camp: 'all', n: 30 }, rows: [], set: null, edit: null, tab: 'conn', boot: null, empty: false };
 
   // ---------- связь с Apps Script ----------
   function ApiError(code, msg) { this.code = code; this.message = msg || code; }
@@ -1152,7 +1140,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     if (d.length <= 45) return d.map(function (x) { return Object.assign({ to: x.date }, x); });
     for (var i = d.length; i > 0; i -= 7) { // с конца: неполной будет самая старая неделя, а не текущая
       var ch = d.slice(Math.max(0, i - 7), i), b = { date: ch[0].date, to: ch[ch.length - 1].date };
-      ['spend', 'conversations', 'leads', 'qualified', 'sales', 'revenue', 'impressions', 'clicks'].forEach(function (k) { b[k] = ch.reduce(function (a, x) { return a + (x[k] || 0); }, 0); });
+      ['spend', 'leads', 'qualified', 'sales', 'revenue'].forEach(function (k) { b[k] = ch.reduce(function (a, x) { return a + (x[k] || 0); }, 0); });
       out.unshift(b);
     }
     return out;
@@ -1306,9 +1294,9 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     $('updAt').textContent = $('updAt').title = txt; $('sideSync').textContent = txt || 'Синк ещё не запускался';
     $('prevHint').textContent = 'в сравнении с ' + day(m.prevFrom, true) + ' — ' + day(m.prevTo, true);
     $('nvLeads').textContent = d.leadsTotal == null ? '—' : nf.format(d.leadsTotal);
-    var un = k.unallocatedSpend > 0 ? 'Расход Meta вне каналов: ' + fmtMoney(k.unallocatedSpend) + '. Он не входит в итоги. Настрой каналы в Настройках.' : '';
-    ['unOv', 'unCh'].forEach(function (id) { var el = $(id); el.hidden = !un; el.innerHTML = un ? ico('info') + '<span></span>' : ''; if (un) el.lastChild.textContent = un; });
-    S.empty = !(k.spend || k.leads || (d.channels && d.channels.length) || (d.leads && d.leads.length));
+    var un = k.leadsUnattributed > 0 ? 'Заявки вне рекламы: ' + nf.format(k.leadsUnattributed) + ' из ' + nf.format(k.leadsAll) + '. Привязано ' + pct(k.matchRatePct) + '.' : '';
+    var ue = $('unOv'); ue.hidden = !un; ue.innerHTML = un ? ico('info') + '<span></span>' : ''; if (un) ue.lastChild.textContent = un;
+    S.empty = !(k.spend || k.leads || k.leadsAll || (d.leads && d.leads.length) || (d.campaigns && d.campaigns.length));
     renderView();
   }
   function renderView() {
@@ -1317,13 +1305,16 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     var blocked = S.empty;
     showState(blocked ? 'empty' : '');
     if (!S.data || blocked) return;
-    ({ overview: renderOverview, channels: renderChannels, leads: renderLeads })[S.view]();
+    ({ overview: renderOverview, ads: renderAds, leads: renderLeads })[S.view]();
   }
-  var VIEW_NAMES = { overview: 'Обзор', channels: 'Каналы', leads: 'Заявки', settings: 'Настройки' };
+  var VIEW_NAMES = { overview: 'Обзор', ads: 'Реклама', leads: 'Заявки', settings: 'Настройки' };
   function go(view) {
     if (!VIEW_NAMES[view] || (view === 'settings' && S.role !== 'admin')) view = 'overview';
     var changed = S.view !== view; S.view = view;
     if (changed) closeDrawer();
+    // широкой таблице рекламы нужна ширина: боковая панель сворачивается сама, при уходе возвращается (как у донора на «Заявках»); меню остаётся в рейке
+    if (view === 'ads' && innerWidth > 1100 && !app.classList.contains('collapsed')) { app.classList.add('collapsed'); S.sideAuto = true; }
+    else if (view !== 'ads' && S.sideAuto) { app.classList.remove('collapsed'); S.sideAuto = false; }
     Object.keys(VIEW_NAMES).forEach(function (v) { $('v-' + v).hidden = v !== view; });
     document.querySelectorAll('[data-view]').forEach(function (b) {
       var on = b.dataset.view === view; b.classList.toggle('on', on);
@@ -1335,13 +1326,13 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     if (S.data || view === 'settings') renderView();
   }
   document.addEventListener('click', function (e) { var b = e.target.closest('[data-view]'); if (b) go(b.dataset.view); });
-  $('collapse').addEventListener('click', function () { $('app').classList.add('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
-  $('expand').addEventListener('click', function () { $('app').classList.toggle('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
+  $('collapse').addEventListener('click', function () { S.sideAuto = false; $('app').classList.add('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
+  $('expand').addEventListener('click', function () { S.sideAuto = false; $('app').classList.toggle('collapsed'); setTimeout(function () { if (S.data && S.view === 'overview') renderChart(false); }, 470); });
 
   // ---------- Обзор ----------
   var KPI = [
-    { k: 'spend', t: 'Расход', ico: 'wallet', f: fmtMoney, sub: function () { return 'Meta и ручной ввод'; } },
-    { k: 'leads', t: 'Заявки', ico: 'users', f: nf0, sub: function () { return 'новые сделки в CRM'; } },
+    { k: 'spend', t: 'Расход', ico: 'wallet', f: fmtMoney, sub: function () { return 'реклама Meta'; } },
+    { k: 'leads', t: 'Заявки', ico: 'users', f: nf0, sub: function () { return 'из рекламы'; } },
     { k: 'qualified', t: 'Квалы', ico: 'ucheck', f: nf0, sub: function (c) { return c.qualRate == null ? 'нет заявок' : pct(c.qualRate) + ' от заявок'; } },
     { k: 'sales', t: 'Продажи', ico: 'cart', f: nf0, sub: function (c) { return c.closeRate == null ? 'нет квалов' : pct(c.closeRate) + ' квалов дошло до продажи'; } },
     { k: 'revenue', t: 'Выручка', ico: 'coins', f: fmtMoney, sub: function () { return 'сумма проданных'; } },
@@ -1364,71 +1355,140 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     knob('ctabs', '[aria-selected="true"]');
   }
 
-  // ---------- Каналы ----------
-  var LEVELS = { utm_source: 'source', utm_medium: 'medium', utm_campaign: 'campaign', utm_content: 'content', utm_term: 'term' };
-  var SPSRC = { meta: 'расход из Meta', manual: 'ручной расход', none: 'без расхода' };
-  function chRow(n, depth, key, top) {
-    var kids = n.children || [], open = !!S.open[key], has = kids.length > 0;
-    var name = top ? n.name : lbl(n.value), small = top ? SPSRC[n.spendSource] || '' : LEVELS[n.level] || n.level;
-    var h = '<div class="tr' + (has ? ' has' : '') + (top ? '' : ' sub') + '" role="row"' + (has ? ' tabindex="0" aria-expanded="' + open + '"' : '') + ' data-k="' + esc(key) + '" style="animation-delay:0s">' +
-      '<span class="cr" style="padding-left:' + (14 + depth * 22) + 'px"><span class="chv' + (has ? '' : ' ph') + '">' + (has ? ico('chevr') : '') + '</span>' +
-      '<span><span class="nm' + (!top && (n.value === '' || n.value == null) ? ' dim' : '') + '" title="' + esc(name) + '">' + esc(name) + '</span><small>' + esc(small) + '</small></span></span>' +
-      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spendSource !== 'none' ? fmtMoney(n.spend) : '—') + '</span>' +
-      '<span class="r">' + nf0(n.leads) + '</span><span class="r">' + nf0(n.qualified) + '</span><span class="r">' + nf0(n.sales) + '</span>' +
-      '<span class="r">' + fmtMoney(n.revenue) + '</span>' +
-      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spend > 0 && n.spendSource !== 'none' ? fmtMoney(n.cpl) : '—') + '</span>' +
-      '<span class="r' + (top ? '' : ' dim') + '">' + (top && n.spend > 0 && n.spendSource !== 'none' ? pct(n.romiPct) : '—') + '</span></div>';
-    if (open) kids.forEach(function (c) { h += chRow(c, depth + 1, key + '␟' + sf(c.value, ''), false); });
-    return h;
+  // ---------- Реклама: кампании · группы · объявления (вкладки и таблица — как «Креативы» в большом дашборде, без картинок и вердиктов) ----------
+  var LVL = [['camps', 'Кампании'], ['sets', 'Группы'], ['ads', 'Объявления']];
+  var ACOLS = [['spend', 'Расход', fmtMoney], ['impressions', 'Показы', nf0], ['clicks', 'Клики', nf0], ['ctr', 'CTR', pct], ['leads', 'Заявки', nf0], ['qualified', 'Квалы', nf0],
+    ['sales', 'Продажи', nf0], ['revenue', 'Выручка', fmtMoney], ['cpl', 'Цена заявки', fmtMoney], ['romiPct', 'ROMI', pct]];
+  var NOT_DEF = { sets: 'Группа не определена', ads: 'Объявление не определено' };
+  var ROWS = [];
+  function ascKey(k) { return k === 'cpl'; } // цены — по возрастанию (дешевле — лучше)
+  function by(key, dir) { return function (a, b) { var x = a[key], y = b[key]; if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1; return (x - y) * dir; }; }
+  function dirLabel() { return S.ads.dir < 0 ? '↓ По убыванию' : '↑ По возрастанию'; }
+  function adList(lvl) {
+    var d = S.data, c = S.ads.camp, st = S.ads.set;
+    if (lvl === 'camps') return d.campaigns || [];
+    if (lvl === 'sets') return (d.adsets || []).filter(function (x) { return !c || x.campaignId === c.id; });
+    return (d.ads || []).filter(function (x) { return (!c || x.campaignId === c.id) && (!st || x.adsetId === st.id); });
   }
-  function renderChannels() {
-    var list = S.data.channels || [];
-    $('chRows').innerHTML = list.length ? list.map(function (c) { return chRow(c, 0, c.id, true); }).join('')
-      : '<div class="empty"><b>Каналов пока нет</b>Добавь правила в Настройки → Каналы.</div>';
+  function adChips() {
+    var A = S.ads, h = '';
+    function chip(k, t) { return '<button type="button" class="tg q" data-act="x-' + k + '" aria-label="Убрать фильтр: ' + esc(t) + '"><span>' + esc(t) + '</span>' + ico('x') + '</button>'; }
+    if (A.camp) h += chip('camp', 'Кампания: ' + A.camp.name);
+    if (A.set) h += chip('set', 'Группа: ' + A.set.name);
+    return h ? h + '<button type="button" class="ghostbtn" data-act="reset">Сбросить</button>' : '';
   }
-  function toggleCh(row) {
-    if (!row || !row.classList.contains('has')) return;
-    var k = row.dataset.k; S.open[k] = !S.open[k]; renderChannels();
-    var again = $('chRows').querySelector('.tr[data-k="' + (window.CSS && CSS.escape ? CSS.escape(k) : k) + '"]'); if (again) again.focus({ preventScroll: true });
+  function adRow(r, lvl, i) {
+    var d = S.data, nm, sub;
+    if (lvl === 'camps') {
+      var ns = (d.adsets || []).filter(function (x) { return x.campaignId === r.id && x.id != null; }).length, na = (d.ads || []).filter(function (x) { return x.campaignId === r.id && x.id != null; }).length;
+      nm = '<button type="button" class="nm lnk" data-drill="' + i + '" title="Открыть группы кампании">' + esc(sf(r.name)) + '</button>';
+      sub = ns + ' ' + pl(ns, ['группа', 'группы', 'групп']) + ' · ' + na + ' ' + pl(na, ['объявление', 'объявления', 'объявлений']);
+    } else if (r.id == null) {
+      nm = '<span class="nm dim">' + NOT_DEF[lvl] + '</span>'; sub = lvl === 'sets' ? esc(sf(r.campaignName)) : esc(sf(r.adsetName, 'группа не определена')) + ' · ' + esc(sf(r.campaignName));
+    } else if (lvl === 'sets') {
+      var no = (d.ads || []).filter(function (x) { return x.adsetId === r.id && x.id != null; }).length;
+      nm = '<button type="button" class="nm lnk" data-drill="' + i + '" title="Открыть объявления группы">' + esc(sf(r.name)) + '</button>';
+      sub = esc(sf(r.campaignName)) + ' · ' + no + ' ' + pl(no, ['объявление', 'объявления', 'объявлений']);
+    } else { nm = '<span class="nm" title="' + esc(r.name) + '">' + esc(sf(r.name)) + '</span>'; sub = esc(sf(r.adsetName, 'группа не определена')) + ' · ' + esc(sf(r.campaignName)); }
+    return '<div class="tr" role="row"><span class="cr"><span style="min-width:0">' + nm + '<small>' + sub + '</small></span></span>' +
+      ACOLS.map(function (c) { return '<span class="r' + (r.id == null && c[0] === 'spend' ? ' dim' : '') + '">' + c[2](r[c[0]]) + '</span>'; }).join('') + '</div>';
   }
-  $('chRows').addEventListener('click', function (e) { toggleCh(e.target.closest('.tr')); });
-  $('chRows').addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('tr')) { e.preventDefault(); toggleCh(e.target); } });
+  function renderAds() {
+    var d = S.data, A = S.ads, box = $('adsBox'), lvl = A.lvl;
+    var n = { camps: adList('camps').length, sets: adList('sets').length, ads: adList('ads').length };
+    var lvH = LVL.map(function (l) { return '<button role="tab" id="lv-' + l[0] + '" aria-controls="adList" aria-selected="' + (lvl === l[0]) + '" data-lv="' + l[0] + '"><span class="ck" data-ico="check"></span>' + l[1] + ' <span class="cnt">' + n[l[0]] + '</span></button>'; }).join('');
+    $('adsHint').textContent = lvl === 'camps' ? 'клик по названию кампании открывает её группы' : lvl === 'sets' ? 'клик по названию группы открывает её объявления' : 'объявления с расходом или привязанными заявками';
+    var chips = adChips();
+    box.innerHTML = '<div class="tbar"><div class="tabs" role="tablist" aria-label="Уровень" id="lvtabs"><span class="knob"></span>' + lvH + '</div></div>' +
+      '<div class="tbar"><div id="ddSort"></div><button class="ghostbtn" id="fDir">' + dirLabel() + '</button></div>' +
+      '<div class="tbar chips" id="adChips"' + (chips ? '' : ' hidden') + '>' + chips + '</div><div id="adList" role="tabpanel" aria-labelledby="lv-' + lvl + '"></div>';
+    paintIcons(box);
+    tabs('lvtabs', 'aria-selected', function (b) { A.lvl = b.dataset.lv; renderAds(); $('lv-' + A.lvl).focus(); });
+    dropdown($('ddSort'), 'Сортировка', ACOLS.map(function (c) { return { v: c[0], t: c[1] }; }), A.sort, function (v) { A.sort = v; A.dir = ascKey(v) ? 1 : -1; $('fDir').textContent = dirLabel(); drawAdList(); });
+    $('fDir').onclick = function () { A.dir *= -1; this.textContent = dirLabel(); drawAdList(); };
+    $('adChips').onclick = function (e) {
+      var b = e.target.closest('[data-act]'); if (!b) return;
+      if (b.dataset.act === 'x-set') A.set = null; else { A.set = null; A.camp = null; } // фильтр кампании снимает и фильтр группы: группа принадлежит кампании
+      renderAds();
+    };
+    drawAdList();
+  }
+  function drawAdList() {
+    var A = S.ads, box = $('adList'), lvl = A.lvl, d = S.data;
+    if (!box) return;
+    ROWS = adList(lvl).slice().sort(by(A.sort, A.dir));
+    if (!ROWS.length) {
+      var none = !(d.campaigns || []).length && !(d.adsets || []).length && !(d.ads || []).length;
+      box.innerHTML = none ? '<div class="state" style="margin:0"><b>За период нет данных рекламы</b>Если Meta ещё не подключена, добавь рекламный кабинет и токен в Настройки → Подключения.' + (S.role === 'admin' ? '<br><button class="btn-v" data-view="settings">' + ico('sliders') + 'Открыть настройки</button>' : '') + '</div>'
+        : '<div class="state" style="margin:0"><b>Ничего не найдено</b>' + ((A.camp || A.set) ? '<button class="ghostbtn" data-act="reset" style="margin-top:12px">' + ico('x') + 'Сбросить фильтр</button>' : 'Выбери другой период.') + '</div>';
+      return;
+    }
+    var head = '<div class="thead" role="row"><span>' + (lvl === 'camps' ? 'Кампания' : lvl === 'sets' ? 'Группа' : 'Объявление') + '</span>' + ACOLS.map(function (c) {
+      var on = A.sort === c[0];
+      return '<button class="r' + (on ? ' on' : '') + '" data-k="' + c[0] + '" aria-sort="' + (on ? (A.dir < 0 ? 'descending' : 'ascending') : 'none') + '">' + c[1] + (on ? (A.dir < 0 ? ' ↓' : ' ↑') : '') + '</button>';
+    }).join('') + '</div>';
+    box.innerHTML = '<div class="tbl tscroll" role="table" aria-label="' + esc(LVL.filter(function (l) { return l[0] === lvl; })[0][1]) + '"><div class="adt">' + head + ROWS.map(function (r, i) { return adRow(r, lvl, i); }).join('') + '</div></div>';
+    if ((((d.meta || {}).truncated) || {})[{ camps: 'campaigns', sets: 'adsets', ads: 'ads' }[lvl]]) box.insertAdjacentHTML('beforeend', '<div class="hintk" id="adTrunc" style="margin-top:10px;color:var(--muted)">Показаны первые 1000 строк по расходу</div>');
+    box.querySelector('.thead').onclick = function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (A.sort === b.dataset.k) A.dir *= -1; else { A.sort = b.dataset.k; A.dir = ascKey(A.sort) ? 1 : -1; }
+      renderAds();
+    };
+    box.querySelectorAll('[data-drill]').forEach(function (b) {
+      b.onclick = function () { // кампания → её группы, группа → её объявления
+        var r = ROWS[+b.dataset.drill]; if (!r) return;
+        if (A.lvl === 'camps') { A.camp = { id: r.id, name: sf(r.name) }; A.set = null; A.lvl = 'sets'; }
+        else { A.camp = A.camp || { id: r.campaignId, name: sf(r.campaignName) }; A.set = { id: r.id, name: sf(r.name) }; A.lvl = 'ads'; }
+        renderAds(); $('lv-' + A.lvl).focus();
+      };
+    });
+  }
+  $('v-ads').addEventListener('click', function (e) { var b = e.target.closest('[data-act="reset"]'); if (b) { S.ads.camp = null; S.ads.set = null; renderAds(); } });
 
-  // ---------- Заявки ----------
+  var ddMa, ddSt, ddCa;
   var ST_OPTS = [{ v: 'all', t: 'Все статусы' }, { v: 'qual', t: 'Квал' }, { v: 'sold', t: 'Продажа' }, { v: 'noq', t: 'Без квала' }];
-  var ddCh, ddSt;
+  var MA_OPTS = [{ v: 'all', t: 'Все заявки' }, { v: 'ads', t: 'Из рекламы' }, { v: 'none', t: 'Вне рекламы' }];
+  var METHOD = { id: 'по номеру', names: 'по названию', none: 'не привязана' };
+  function attributed(l) { return !!(l.match && l.match.method && l.match.method !== 'none'); }
   function crmLink(u) {
     var s = safeUrl(u);
     return s ? '<a class="amo" href="' + esc(s) + '" target="_blank" rel="noopener noreferrer" aria-label="Открыть сделку в CRM (новая вкладка)">' + ico('arrow') + '<span class="t">в CRM</span></a>' : '<span class="mut">—</span>';
+  }
+  function adCell(l) { // кампания, под ней группа и объявление вторичным текстом; нет привязки — «Не привязана»
+    var m = l.match || {};
+    if (!attributed(l)) return '<span class="ch mut">Не привязана</span>';
+    var sub = [m.adsetName, m.adName].filter(function (x) { return x != null && x !== ''; }).join(' · ');
+    return '<span class="ch" title="' + esc(sf(m.campaignName)) + '">' + esc(sf(m.campaignName)) + '</span>' + (sub ? '<span class="ut" title="' + esc(sub) + '">' + esc(sub) + '</span>' : '');
   }
   function utmLine(u) { return [u.source, u.medium, u.campaign].map(function (x) { return lbl(x); }).join(' / '); }
   function statusTag(l) { return l.sold ? '<span class="tg sum">продажа</span>' : l.qualified ? '<span class="tg q">квал</span>' : '<span class="tg nq">без квала</span>'; }
   function filterLeads() {
     return (S.data.leads || []).filter(function (l) {
       var f = S.lf;
-      return (f.ch === 'all' || l.channelId === f.ch) && (f.st === 'all' || (f.st === 'qual' && l.qualified) || (f.st === 'sold' && l.sold) || (f.st === 'noq' && !l.qualified));
+      return (f.ma === 'all' || (f.ma === 'ads') === attributed(l)) && (f.camp === 'all' || (attributed(l) && l.match.campaignId === f.camp)) && (f.st === 'all' || (f.st === 'qual' && l.qualified) || (f.st === 'sold' && l.sold) || (f.st === 'noq' && !l.qualified));
     });
   }
   function renderLeads() {
-    var all = S.data.leads || [], chs = S.data.channels || [], cnt = {};
-    all.forEach(function (l) { cnt[l.channelId] = (cnt[l.channelId] || 0) + 1; });
-    var chOpts = [{ v: 'all', t: 'Все каналы', sub: all.length }].concat(chs.map(function (c) { return { v: c.id, t: c.name, sub: cnt[c.id] || 0 }; }));
-    if (!chOpts.some(function (o) { return o.v === S.lf.ch; })) S.lf.ch = 'all';
-    ddCh = dropdown($('ddCh'), 'Канал', chOpts, S.lf.ch, function (v) { S.lf.ch = v; S.lf.n = 30; drawLeads(); });
+    var all = S.data.leads || [], cs = S.data.campaigns || [], cnt = {};
+    all.forEach(function (l) { if (attributed(l) && l.match.campaignId != null) cnt[l.match.campaignId] = (cnt[l.match.campaignId] || 0) + 1; });
+    var caOpts = [{ v: 'all', t: 'Все кампании', sub: all.length }].concat(cs.filter(function (c) { return c.id != null; }).map(function (c) { return { v: c.id, t: sf(c.name), sub: cnt[c.id] || 0 }; }));
+    if (!caOpts.some(function (o) { return o.v === S.lf.camp; })) S.lf.camp = 'all';
+    ddMa = dropdown($('ddMa'), 'Привязка', MA_OPTS, S.lf.ma, function (v) { S.lf.ma = v; S.lf.n = 30; drawLeads(); });
     ddSt = dropdown($('ddSt'), 'Статус', ST_OPTS, S.lf.st, function (v) { S.lf.st = v; S.lf.n = 30; drawLeads(); });
+    ddCa = dropdown($('ddCa'), 'Кампания', caOpts, S.lf.camp, function (v) { S.lf.camp = v; S.lf.n = 30; drawLeads(); });
     drawLeads();
   }
   function drawLeads() {
     var rows = S.rows = filterLeads(), box = $('leadsBox'), tot = S.data.leadsTotal, all = (S.data.leads || []).length;
     $('leadsHint').textContent = (rows.length === all ? '' : 'после фильтра: ' + rows.length + ' · ') + 'показано ' + all + (tot != null && tot > all ? ' из ' + nf.format(tot) : '');
-    if (!rows.length) { box.innerHTML = '<div class="state" style="margin:0">' + (all ? '<b>По фильтру ничего нет</b>Смени канал или статус.' : '<b>Заявок за период нет</b>Выбери другой период.') + '</div>'; return; }
+    if (!rows.length) { box.innerHTML = '<div class="state" style="margin:0">' + (all ? '<b>По фильтру ничего нет</b>Смени привязку, статус или кампанию.' : '<b>Заявок за период нет</b>Выбери другой период.') + '</div>'; return; }
     var more = rows.length - S.lf.n;
-    box.innerHTML = '<div class="lt" role="table" aria-label="Заявки"><div class="lt-h" role="row"><span>Дата</span><span>Канал</span><span>Метки</span><span>Стадия</span><span>Статус</span><span class="r">Сумма</span><span class="r">CRM</span></div>' +
+    box.innerHTML = '<div class="lt" role="table" aria-label="Заявки"><div class="lt-h" role="row"><span>Дата</span><span>Реклама</span><span>Метки</span><span>Стадия</span><span>Статус</span><span class="r">Сумма</span><span class="r">CRM</span></div>' +
       rows.slice(0, S.lf.n).map(function (l, i) {
         var u = l.utm || {};
         return '<div class="lr" role="row" tabindex="0" data-i="' + i + '" style="animation-delay:' + Math.min(i * 20, 400) + 'ms">' +
           '<span class="dtc">' + esc(dt(l.createdAt)) + '</span>' +
-          '<span class="ch" title="' + esc(l.channelName) + '">' + esc(l.channelName) + '</span>' +
+          '<span>' + adCell(l) + '</span>' +
           '<span class="ut" title="' + esc(utmLine(u)) + '">' + esc(utmLine(u)) + '</span>' +
           '<span><span class="stp">' + esc(sf(l.stageName)) + '</span></span>' +
           '<span>' + statusTag(l) + '</span>' +
@@ -1470,8 +1530,9 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       '<h3>№ ' + esc(l.crmId) + '</h3><div class="sub">создана ' + esc(dt(l.createdAt)) + '</div>' +
       '<div class="dw-tags"><span class="stp">' + esc(sf(l.stageName)) + '</span>' + statusTag(l) + '</div>' +
       (link ? '<a class="btn-v dw-cta" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + ico('arrow') + 'Открыть в CRM</a>' : '') +
-      '<h4>Канал и метки</h4><dl class="kv"><dt>Канал</dt><dd>' + esc(l.channelName) + '</dd>' +
-      '<dt>utm_source</dt><dd>' + esc(lbl(u.source)) + '</dd><dt>utm_medium</dt><dd>' + esc(lbl(u.medium)) + '</dd><dt>utm_campaign</dt><dd>' + esc(lbl(u.campaign)) + '</dd>' +
+      '<h4>Реклама</h4><dl class="kv"><dt>Привязка</dt><dd>' + esc(METHOD[(l.match || {}).method] || 'не привязана') + '</dd><dt>Кампания</dt><dd>' + esc(sf((l.match || {}).campaignName)) + '</dd>' +
+      '<dt>Группа</dt><dd>' + esc(sf((l.match || {}).adsetName)) + '</dd><dt>Объявление</dt><dd>' + esc(sf((l.match || {}).adName)) + '</dd></dl>' +
+      '<h4>Метки</h4><dl class="kv"><dt>utm_source</dt><dd>' + esc(lbl(u.source)) + '</dd><dt>utm_medium</dt><dd>' + esc(lbl(u.medium)) + '</dd><dt>utm_campaign</dt><dd>' + esc(lbl(u.campaign)) + '</dd>' +
       '<dt>utm_content</dt><dd>' + esc(lbl(u.content)) + '</dd><dt>utm_term</dt><dd>' + esc(lbl(u.term)) + '</dd></dl>' +
       '<h4>Деньги</h4><dl class="kv"><dt>Сумма сделки</dt><dd>' + (l.amount > 0 ? fmtMoney(l.amount) : '—') + '</dd><dt>Продажа</dt><dd>' + (l.sold ? 'да' : 'нет') + '</dd><dt>Квал</dt><dd>' + (l.qualified ? 'да' : 'нет') + '</dd></dl></div>';
     showDrawer('Заявка № ' + l.crmId);
@@ -1485,7 +1546,6 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
   var CRM_T = { none: 'Без CRM', amocrm: 'amoCRM', bitrix24: 'Битрикс24' };
   var SEC_BY = { amocrm: ['AMO_TOKEN', 'Токен amoCRM'], bitrix24: ['BITRIX_WEBHOOK', 'Вебхук Битрикс24'] };
   function csv(v) { return String(v == null ? '' : v).split(',').map(function (x) { return x.trim(); }).filter(Boolean); }
-  function clone(a) { return JSON.parse(JSON.stringify(a || [])); }
   function opt(v, t, cur, off) { return '<option value="' + esc(v) + '"' + (String(v) === String(cur) ? ' selected' : '') + (off ? ' disabled' : '') + '>' + esc(t) + '</option>'; }
   function fld(label, inner, hint, id) { return '<div class="fld"><label class="fl"' + (id ? ' for="' + id + '"' : '') + '>' + esc(label) + '</label>' + inner + (hint ? '<div class="hintk">' + hint + '</div>' : '') + '</div>'; }
   function tin(attrs, val, ph) { return '<input class="tin" ' + attrs + ' value="' + esc(val == null ? '' : val) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '>'; }
@@ -1509,15 +1569,13 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     el.setAttribute('aria-invalid', 'true');
     var d = document.createElement('div'); d.className = 'hintk err'; d.setAttribute('data-err', id); d.setAttribute('role', 'alert'); d.textContent = text; host.appendChild(d);
   }
-  function markDirty() { var d = $('dirty'); if (d) d.textContent = 'не сохранено'; }
 
   // Модель редактирования S.edit живёт отдельно от серверных данных S.set: после сохранения раздела обновляется только своя часть
   function loadSettings() {
     if (S.set) return Promise.resolve();
     return callT('apiSettingsGet').then(function (r) {
       S.set = r;
-      S.edit = { cfg: Object.assign({}, r.settings), sec: {}, qual: csv(r.settings.qualification_stage_ids), sale: csv(r.settings.sale_stage_ids),
-        channels: clone(r.channels), spend: clone(r.spend), check: null };
+      S.edit = { cfg: Object.assign({}, r.settings), sec: {}, qual: csv(r.settings.qualification_stage_ids), sale: csv(r.settings.sale_stage_ids), check: null };
     });
   }
   function applySettings(res, keys) { // ответ apiSettingsSave: серверные настройки целиком, в форму — только сохранённые ключи
@@ -1538,7 +1596,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     drawTab();
   }
   function drawTab() {
-    var fn = { conn: tabConn, qual: tabQual, chan: tabChan, spend: tabSpend, acc: tabAcc, look: tabLook, sync: tabSync }[S.tab];
+    var fn = { conn: tabConn, qual: tabQual, acc: tabAcc, look: tabLook, sync: tabSync }[S.tab];
     $('sBox').innerHTML = fn() + sMsg();
     knob('stabs', '[aria-selected="true"]');
     if (S.tab === 'look') afterLook();
@@ -1652,99 +1710,6 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       '<div class="acts"><button class="btn-v" data-act="saveQual">' + ico('check') + 'Сохранить</button><button class="ghostbtn" data-act="stages">' + ico('refresh') + 'Обновить стадии из CRM</button></div>';
   }
 
-  // --- Каналы (правила) ---
-  var UTMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
-  function noCond(c) { return !UTMS.some(function (u) { return String(c[u] || '').trim(); }); }
-  function tabChan() {
-    var L = S.edit.channels;
-    return '<div class="bn">' + ico('info') + '<span>Пустое поле — любое значение. <code>insta*</code> — начинается с «insta», <code>*cpc*</code> — содержит «cpc». Регистр и пробелы по краям не важны. Правила проверяются сверху вниз, срабатывает первое подходящее. Остальные заявки попадут в «Прочие метки» или «Без меток».</span></div>' +
-      '<div class="bn">' + ico('info') + '<span>Расход в итогах — это сумма по каналам. Кампании Meta, которые не подошли ни одному каналу, в итог не входят: проверь, что у каждой есть свой канал с источником «Реклама Meta».</span></div>' +
-      (L.length ? L.map(function (c, i) {
-        return '<div class="rule" data-r="' + i + '"><div class="rule-h"><b>Правило ' + (i + 1) + '</b>' +
-          '<button class="ib2" data-act="up" data-i="' + i + '" aria-label="Выше"' + (i === 0 ? ' disabled' : '') + '><span style="display:grid;transform:rotate(0)">' + ico('chevu') + '</span></button>' +
-          '<button class="ib2" data-act="down" data-i="' + i + '" aria-label="Ниже"' + (i === L.length - 1 ? ' disabled' : '') + '>' + ico('chevd') + '</button>' +
-          '<button class="ib2 danger" data-act="del" data-i="' + i + '" aria-label="Удалить правило">' + ico('trash') + '</button></div>' +
-          fld('Название канала', tin('id="cn' + i + '" data-l="channels" data-i="' + i + '" data-f="name" maxlength="80"', c.name, 'Например, Instagram'), '', 'cn' + i) +
-          '<div class="g5">' + UTMS.map(function (u) { return fld(u, tin('id="u' + i + u + '" data-l="channels" data-i="' + i + '" data-f="' + u + '"', c[u], 'любое'), '', 'u' + i + u); }).join('') + '</div>' +
-          '<div class="hintk" id="nc' + i + '"' + (noCond(c) ? '' : ' hidden') + '>Без меток канал не забирает заявки, только расход.</div>' +
-          '<div class="grid2" style="margin:14px 0 0">' +
-          fld('Откуда расход', '<select class="sel" id="ss' + i + '" data-l="channels" data-i="' + i + '" data-f="spend_source">' + opt('meta', 'Реклама Meta', c.spend_source) + opt('manual', 'Вручную', c.spend_source) + opt('none', 'Нет расхода', c.spend_source || 'none') + '</select>', '', 'ss' + i) +
-          (c.spend_source === 'meta' ? fld('Фильтр кампаний Meta', tin('id="mf' + i + '" data-l="channels" data-i="' + i + '" data-f="meta_filter"', c.meta_filter, 'часть названия'), 'Пусто — весь кабинет.', 'mf' + i) : '') + '</div></div>';
-      }).join('') : '<div class="state" style="margin:0 0 16px"><b>Правил пока нет</b>Добавь первое, и заявки начнут раскладываться по каналам.</div>') +
-      '<div class="acts"><button class="ghostbtn" data-act="add">' + ico('plus') + 'Добавить правило</button><button class="btn-v" data-act="saveChan">' + ico('check') + 'Сохранить</button><span class="dirty" id="dirty"></span></div>';
-  }
-  function saveChan() {
-    var L = S.edit.channels;
-    var bad = false;
-    L.forEach(function (c, i) {
-      var chk = [['cn' + i, c.name, 80, true]].concat(UTMS.map(function (u) { return ['u' + i + u, c[u], 100, false]; }), c.spend_source === 'meta' ? [['mf' + i, c.meta_filter, 100, false]] : []);
-      chk.forEach(function (x) {
-        var e = textErr(x[1], x[2], x[3]);
-        if (!e && String(x[1] || '').split('*').length > 6) e = 'Не больше 5 звёздочек.';
-        fieldErr(x[0], e); if (e) bad = true;
-      });
-    });
-    if (bad) { say('err', 'Исправь выделенные поля.'); return Promise.reject(); }
-    var out = L.map(function (c, i) {
-      var o = { name: String(c.name).trim(), spend_source: c.spend_source || 'none', meta_filter: c.spend_source === 'meta' ? String(c.meta_filter || '').trim() : '', sort: i + 1 };
-      UTMS.forEach(function (u) { o[u] = String(c[u] || '').trim(); });
-      if (c.id) o.id = c.id;
-      return o;
-    });
-    return callT('apiChannelsSave', out).then(function (res) {
-      if (Array.isArray(res.channels)) { S.set.channels = res.channels; S.edit.channels = clone(res.channels); }
-      if (Array.isArray(res.spend)) { // сервер сам удалил расход удалённых каналов: этих строк в форме быть не должно, новые и правки остаются
-        var keep = {}; res.spend.forEach(function (r) { keep[r.id] = true; });
-        S.set.spend = res.spend; S.edit.spend = S.edit.spend.filter(function (r) { return !r.id || keep[r.id]; });
-      }
-      var dead = S.edit.spend.some(function (r) { return !chExists(r.channel_id); });
-      drawTab(); say('ok', dead ? 'Правила сохранены. У некоторых строк ручного расхода канала больше нет: выбери другой в разделе «Ручной расход».' : 'Правила сохранены.');
-      reloadData();
-    });
-  }
-
-  // --- Ручной расход ---
-  function chExists(id) { return !!id && (S.set.channels || []).some(function (c) { return c.id === id; }); }
-  function tabSpend() {
-    var L = S.edit.spend, chs = (S.set.channels || []).filter(function (c) { return c.spend_source === 'manual'; });
-    if (!chs.length && !L.length) return '<div class="state" style="margin:0"><b>Нет каналов с ручным расходом</b>Выбери «Вручную» у нужного канала в разделе «Каналы» и сохрани.</div>';
-    var all = S.set.channels || [];
-    return '<div class="bn">' + ico('info') + '<span>Сумма делится поровну по дням от «с» до «по» включительно. В отчёт попадает доля дней, которые входят в выбранный период.</span></div>' +
-      (L.length ? L.map(function (r, i) {
-        var dead = !!r.channel_id && !chExists(r.channel_id);
-        var o = chs.slice(); if (r.channel_id && !dead && !o.some(function (c) { return c.id === r.channel_id; })) o = o.concat(all.filter(function (c) { return c.id === r.channel_id; }));
-        return '<div class="rule' + (dead ? ' bad' : '') + '"><div class="rule-h"><b>Расход ' + (i + 1) + '</b><button class="ib2 danger" data-act="sdel" data-i="' + i + '" aria-label="Удалить строку">' + ico('trash') + '</button></div>' +
-          '<div class="g3">' +
-          fld('Канал', '<select class="sel" id="sc' + i + '" data-l="spend" data-i="' + i + '" data-f="channel_id"' + (dead ? ' aria-invalid="true"' : '') + '><option value="">— выбери —</option>' + o.map(function (c) { return opt(c.id, c.name, dead ? '' : r.channel_id); }).join('') + '</select>' + (dead ? '<div class="hintk err" data-err="sc' + i + '" role="alert">Выбери канал: прежнего больше нет.</div>' : ''), '', 'sc' + i) +
-          fld('С', tin('id="sf' + i + '" type="date" data-l="spend" data-i="' + i + '" data-f="date_from"', r.date_from), '', 'sf' + i) +
-          fld('По', tin('id="st' + i + '" type="date" data-l="spend" data-i="' + i + '" data-f="date_to"', r.date_to), '', 'st' + i) +
-          fld('Сумма', tin('id="sa' + i + '" inputmode="decimal" data-l="spend" data-i="' + i + '" data-f="amount"', r.amount, '0'), '', 'sa' + i) + '</div>' +
-          fld('Комментарий', tin('id="sm' + i + '" data-l="spend" data-i="' + i + '" data-f="comment" maxlength="200"', r.comment, 'Необязательно'), '', 'sm' + i) + '</div>';
-      }).join('') : '<div class="state" style="margin:0 0 16px"><b>Записей пока нет</b>Добавь расход, который не идёт через Meta.</div>') +
-      '<div class="acts"><button class="ghostbtn" data-act="sadd"' + (chs.length ? '' : ' disabled') + '>' + ico('plus') + 'Добавить расход</button><button class="btn-v" data-act="saveSpend">' + ico('check') + 'Сохранить</button><span class="dirty" id="dirty"></span></div>';
-  }
-  function saveSpend() {
-    var L = S.edit.spend, bad = '';
-    L.forEach(function (r, i) {
-      var e = textErr(r.comment, 200, false); fieldErr('sm' + i, e); if (e) bad = 'Исправь выделенные поля.';
-      var ce = chExists(r.channel_id) ? '' : 'Выбери канал'; fieldErr('sc' + i, ce); if (ce) { bad = bad || 'Выбери канал в строке ' + (i + 1) + '.'; var rl = $('sc' + i); if (rl) rl.closest('.rule').classList.add('bad'); }
-    });
-    var out = L.map(function (r, i) {
-      var a = Number(String(r.amount == null ? '' : r.amount).replace(/\s/g, '').replace(',', '.'));
-      if (bad) return r;
-      if (!r.date_from || !r.date_to || r.date_to < r.date_from) bad = 'Проверь даты в строке ' + (i + 1) + ': «по» не может быть раньше «с».';
-      else if (!(a >= 0) || r.amount === '' || r.amount == null) bad = 'Впиши сумму числом в строке ' + (i + 1) + '.';
-      var o = { channel_id: r.channel_id, date_from: r.date_from, date_to: r.date_to, amount: a, comment: String(r.comment || '').trim() };
-      if (r.id) o.id = r.id;
-      return o;
-    });
-    if (bad) { say('err', bad); return Promise.reject(); }
-    return callT('apiSpendSave', out).then(function (res) {
-      if (Array.isArray(res.spend)) { S.set.spend = res.spend; S.edit.spend = clone(res.spend); }
-      drawTab(); say('ok', 'Расход сохранён.'); reloadData();
-    });
-  }
-
   // --- Доступ ---
   // Пароль: 12–200 знаков, минимум 3 вида из 4 (строчные, заглавные, цифры, прочие) или длина от 20 — то же правило, что на сервере
   function pwKinds(v) { return (/[a-zа-яё]/.test(v) ? 1 : 0) + (/[A-ZА-ЯЁ]/.test(v) ? 1 : 0) + (/[0-9]/.test(v) ? 1 : 0) + (/[^a-zA-Zа-яёА-ЯЁ0-9]/.test(v) ? 1 : 0); }
@@ -1760,9 +1725,10 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     do { out = ''; for (var i = 0; i < 20; i++) out += all.charAt(randInt(all.length)); } while (!/[a-z]/.test(out) || !/[A-Z]/.test(out) || !/[2-9]/.test(out));
     return out;
   }
-  function copyText(text, inp) {
-    function fallback() { try { inp.select(); document.execCommand('copy'); toast('Пароль скопирован'); } catch (e) { toast('Не удалось скопировать: выдели пароль и скопируй вручную'); } }
-    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast('Пароль скопирован'); }, fallback); else fallback(); } catch (e) { fallback(); }
+  function copyText(text, inp, done) {
+    done = done || 'Пароль скопирован';
+    function fallback() { try { inp.select(); document.execCommand('copy'); toast(done); } catch (e) { toast('Не удалось скопировать: выдели текст и скопируй вручную'); } }
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(done); }, fallback); else fallback(); } catch (e) { fallback(); }
   }
   function pwCard(kind, title, status) {
     return '<div class="card">' + cardH('key', title, status ? '<span class="tg ' + (status.set ? 'q' : 'nq') + '">' + (status.set ? 'задан' : 'не задан') + '</span>' : '') +
@@ -1773,6 +1739,8 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
   }
   function tabAcc() {
     return '<div class="bn">' + ico('info') + '<span>Пароль просмотра отдай тем, кто должен видеть цифры. Пароль администратора открывает ещё и настройки. Пароли должны отличаться. Пока пароль просмотра не задан, смотреть можно только по паролю администратора.</span></div>' +
+      (hasGas() ? '' : '<div class="card">' + cardH('globe', 'Ссылка для сотрудников') + '<p class="sub-p" style="margin-top:-6px">Эту ссылку вместе с паролем просмотра можно отдать тем, кто должен видеть цифры.</p>' +
+        '<div class="sec-r"><input class="tin" id="linkTxt" readonly value="' + esc(location.href) + '" aria-label="Ссылка на дашборд"><button class="ghostbtn" data-act="copylink">' + ico('check') + 'Скопировать ссылку для сотрудников</button></div></div>') +
       pwCard('view', 'Пароль просмотра', (S.set.secrets || {}).VIEW_PASS) + pwCard('admin', 'Пароль администратора', null);
   }
   function savePw(kind) {
@@ -1912,12 +1880,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       if (t.dataset.k === 'currency' && t.value !== 'KZT' && S.edit.cfg.fx_source === 'nbk') { S.edit.cfg.fx_source = 'fixed'; }
       if (ch && (t.dataset.k === 'crm_type' || t.dataset.k === 'fx_source' || t.dataset.k === 'currency')) redrawKeep(t);
     } else if (t.dataset.sec) S.edit.sec[t.dataset.sec] = t.value;
-    else if (t.dataset.l) {
-      S.edit[t.dataset.l][+t.dataset.i][t.dataset.f] = t.value; markDirty();
-      if (t.dataset.l === 'channels' && /^utm_/.test(t.dataset.f)) { var nc = $('nc' + t.dataset.i); if (nc) nc.hidden = !noCond(S.edit.channels[+t.dataset.i]); }
-      if (ch && t.dataset.f === 'spend_source') redrawKeep(t);
-      if (ch && t.dataset.l === 'spend' && t.dataset.f === 'channel_id') redrawKeep(t);
-    } else if (t.dataset.q) {
+    else if (t.dataset.q) {
       var kind = t.dataset.q, arr = S.edit[kind], v = t.value, i = arr.indexOf(v);
       if (t.checked && i < 0) arr.push(v); else if (!t.checked && i >= 0) arr.splice(i, 1);
       // стадии с одним id в разных воронках (amo: 142 и 143) — одна и та же стадия: галочки двигаются вместе
@@ -1931,7 +1894,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
   }
   sBox.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]'); if (!b || !S.edit) return;
-    var a = b.dataset.act, i = +b.dataset.i, L = S.edit.channels;
+    var a = b.dataset.act;
     if (a === 'saveConn') busy(b, saveConn);
     else if (a === 'check') busy(b, function () { return callT('apiCheck').then(function (r) { S.edit.check = r; drawTab(); }); });
     else if (a === 'secdel') busy(b, function () { var n = b.dataset.n; return callT('apiSecretSave', n, '').then(function () { S.edit.sec[n] = ''; S.set.secrets[n] = { set: false }; drawTab(); say('ok', 'Секрет удалён.'); }); });
@@ -1944,13 +1907,6 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
     else if (a === 'stages') busy(b, function () {
       return callT('apiStagesRefresh').then(function (res) { if (Array.isArray(res.stages)) S.set.stages = res.stages; drawTab(); say('ok', 'Стадии обновлены из CRM.'); }); // галочки не трогаем
     });
-    else if (a === 'add') { L.push({ name: '', utm_source: '', utm_medium: '', utm_campaign: '', utm_content: '', utm_term: '', spend_source: 'none', meta_filter: '' }); drawTab(); markDirty(); var f = $('cn' + (L.length - 1)); if (f) f.focus(); }
-    else if (a === 'del') { L.splice(i, 1); drawTab(); markDirty(); }
-    else if (a === 'up' || a === 'down') { var j = a === 'up' ? i - 1 : i + 1; if (L[j]) { var x = L[i]; L[i] = L[j]; L[j] = x; drawTab(); markDirty(); var nb = sBox.querySelector('[data-act="' + a + '"][data-i="' + j + '"]:not(:disabled)') || sBox.querySelector('[data-act="' + (a === 'up' ? 'down' : 'up') + '"][data-i="' + j + '"]'); if (nb) nb.focus(); } }
-    else if (a === 'saveChan') busy(b, saveChan);
-    else if (a === 'sadd') { S.edit.spend.push({ channel_id: '', date_from: '', date_to: '', amount: '', comment: '' }); drawTab(); markDirty(); var s = $('sc' + (S.edit.spend.length - 1)); if (s) s.focus(); }
-    else if (a === 'sdel') { S.edit.spend.splice(i, 1); drawTab(); markDirty(); }
-    else if (a === 'saveSpend') busy(b, saveSpend);
     else if (a === 'pw') busy(b, function () { return savePw(b.dataset.kind); });
     else if (a === 'pwgen') { // пароль живёт только в двух полях этой карточки, открытым текстом, пока не сохранён или не закрыта вкладка
       var kd = b.dataset.kind, g = genPassword(), p1 = $('pw_' + kd), p2 = $('pw2_' + kd);
@@ -1958,6 +1914,7 @@ label.ghostbtn:focus-within{outline:2px solid var(--violet);outline-offset:2px}
       sBox.querySelector('[data-act="pwcopy"][data-kind="' + kd + '"]').hidden = false; p1.focus(); p1.select();
     }
     else if (a === 'pwcopy') copyText($('pw_' + b.dataset.kind).value, $('pw_' + b.dataset.kind));
+    else if (a === 'copylink') copyText(location.href, $('linkTxt'), 'Ссылка скопирована');
     else if (a === 'saveName') busy(b, function () {
       var n = String(S.edit.cfg.client_name || '').trim(), er = textErr(n, 80, true);
       fieldErr('f_name', er); if (er) return Promise.reject();

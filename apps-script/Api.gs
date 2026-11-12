@@ -26,12 +26,11 @@ function locked_(source, fn) {
 }
 
 function loadRows_() {
-  return { channels: readTable_('Channels'), spendManual: readTable_('Spend_Manual'), metaSpend: readTable_('Meta_Spend'), leads: readTable_('CRM_Leads') };
+  return { metaAds: readTable_('Meta_Ads'), leads: readTable_('CRM_Leads') };
 }
 function bumpVer_() { props_().setProperty('DATA_VER', String(Date.now())); }
 function isoOfMs_(ms) { return +ms ? new Date(+ms).toISOString() : null; }
 function readLogo_() { return logoFromRows_(readTable_('Assets')); }
-function genId_() { return 'ch_' + Utilities.getUuid().replace(/-/g, '').slice(0, 10); }
 
 // ───────── Кэш ответа (значение ≤100 КБ: режем на куски) ─────────
 var CACHE_CHUNK = 30000, CACHE_MAX_CHUNKS = 40, CACHE_TTL_S = 6 * 3600;
@@ -111,7 +110,7 @@ function apiSettingsGet(token) {
     return {
       ok: true, settings: readConfig_(),
       secrets: { META_TOKEN: isSet('META_TOKEN'), AMO_TOKEN: isSet('AMO_TOKEN'), BITRIX_WEBHOOK: isSet('BITRIX_WEBHOOK'), VIEW_PASS: isSet('VIEW_PASS') },
-      channels: sortChannels_(readTable_('Channels')), spend: readTable_('Spend_Manual'), stages: readTable_('Stages'),
+      stages: readTable_('Stages'),
       sync: { lastAt: isoOfMs_(p.getProperty('SYNCED_AT')), triggers: ScriptApp.getProjectTriggers().filter(function (t) { return t.getHandlerFunction() === 'triggerSyncAll'; }).length }
     };
   });
@@ -161,32 +160,6 @@ function apiPasswordSave(token, kind, value) {
     bootDrop_();
     log_('INFO', 'Auth', 'пароль ' + kind + ' обновлён');
     return { ok: true, token: newSession_('admin') }; // все сессии отозваны (PASS_VER): выдаём вызывающему новую
-  });
-}
-
-function apiChannelsSave(token, list) {
-  return guarded_('apiChannelsSave', token, 'admin', function () {
-    var rows = valid_(validateChannels_(list, genId_));
-    var ids = {}, spend;
-    rows.forEach(function (c) { ids[c.id] = true; });
-    locked_('Channels', function () {
-      writeTable_('Channels', rows);
-      // расход удалённых каналов не нужен: убираем, чтобы он не воскрес при совпадении id
-      spend = readTable_('Spend_Manual').filter(function (r) { return has_(ids, String(r.channel_id)); });
-      writeTable_('Spend_Manual', spend);
-      bumpVer_();
-    });
-    return { ok: true, channels: sortChannels_(rows), spend: spend };
-  });
-}
-
-function apiSpendSave(token, list) {
-  return guarded_('apiSpendSave', token, 'admin', function () {
-    var ids = {};
-    readTable_('Channels').forEach(function (c) { ids[String(c.id)] = true; });
-    var rows = valid_(validateSpend_(list, ids, genId_));
-    locked_('Spend', function () { writeTable_('Spend_Manual', rows); bumpVer_(); return true; });
-    return { ok: true, spend: rows };
   });
 }
 

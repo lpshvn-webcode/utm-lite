@@ -105,6 +105,30 @@ function mergeRows_(name, keyFn, newRows) {
   return newRows.length;
 }
 
+// Meta_Ads: строки окна синка (date >= from) заменяются новыми, строки старше cutoff удаляются, остальные не трогаем
+// (лист не переписывается целиком и не растёт бесконечно). Лист упорядочен по date; иначе (ручные правки, пустые строки) — полная атомарная перезапись.
+// Порядок: сначала записываются новые строки (сбой записи оставляет лист как был), потом чистится хвост и удаляется старьё.
+var META_KEEP_DAYS = 400;
+function replaceMetaAds_(rows, from, cutoff) {
+  var name = 'Meta_Ads', sh = ss_().getSheetByName(name), head = SHEET_HEADERS[name], existing = readTable_(name), byKey = {}, order = [];
+  rows.forEach(function (r) { var k = dateKey_(r.date) + '|' + r.ad_id; if (!(k in byKey)) order.push(k); byKey[k] = r; });
+  var fresh = order.map(function (k) { return byKey[k]; }).sort(function (p, q) { return dateKey_(p.date) < dateKey_(q.date) ? -1 : (dateKey_(p.date) > dateKey_(q.date) ? 1 : 0); });
+  var tooOld = 0, keep = 0, sorted = existing.length === Math.max(sh.getLastRow() - 1, 0);
+  existing.forEach(function (r, i) {
+    var d = dateKey_(r.date);
+    if (i > 0 && d < dateKey_(existing[i - 1].date)) sorted = false;
+    if (d < cutoff) tooOld++; else if (d < from) keep++;
+  });
+  if (!sorted) {
+    writeTable_(name, existing.filter(function (r) { var d = dateKey_(r.date); return d >= cutoff && d < from; }).concat(fresh));
+    return;
+  }
+  var start = 2 + tooOld + keep, last = sh.getLastRow(), end = start + fresh.length - 1;
+  if (fresh.length) putRows_(sh, start, head, fresh);
+  if (last > Math.max(end, start - 1)) sh.getRange(Math.max(end, start - 1) + 1, 1, last - Math.max(end, start - 1), head.length).clearContent();
+  if (tooOld > 0) sh.deleteRows(2, tooOld);
+}
+
 function appendRows_(name, rows) {
   if (!rows.length) return;
   var sh = ss_().getSheetByName(name);

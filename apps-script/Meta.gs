@@ -1,4 +1,4 @@
-// Meta.gs — Marketing API Insights (level=campaign, по дням) → Meta_Spend. Токен: Script Property META_TOKEN.
+// Meta.gs — Marketing API Insights (level=ad, по дням) → Meta_Ads. Токен: Script Property META_TOKEN.
 
 // Тексты исключений UrlFetchApp и JSON.parse не пробрасываем (в них бывают URL и куски ответа): наружу только источник, HTTP-код и поле error
 function graphGet_(url) {
@@ -32,17 +32,32 @@ function graphPaged_(url) {
   return out;
 }
 
+// Окно синка запрашивается кусками по 7 дней: у каждого куска своя постраничность, свой потолок страниц и свой запасной размер страницы
+var META_CHUNK_DAYS = 7;
+function fetchMetaChunk_(cfg, since, until) {
+  var url = function (limit) {
+    return graphBase_(cfg) + 'act_' + cfg.meta_ad_account_id + '/insights?' + qs_({
+      level: 'ad', time_increment: 1, limit: limit, time_range: JSON.stringify({ since: since, until: until }),
+      fields: 'date_start,account_id,account_currency,campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,spend,impressions,clicks,actions'
+    });
+  };
+  try { return graphPaged_(url(500)); } catch (e) { // большой кабинет: Meta просит «reduce the amount of data» — этот кусок повторяем страницами поменьше
+    if (!/reduce the amount of data/i.test(e.message)) throw e;
+    return graphPaged_(url(100));
+  }
+}
+
 function syncMeta_() {
   var cfg = readConfig_();
   if (!cfg.meta_ad_account_id) throw new Error('В настройках не задан кабинет Meta (meta_ad_account_id)');
-  var to = todayKey_(cfg), from = daysAgoKey_(cfg, cfg.sync_days_back);
-  var url = graphBase_(cfg) + 'act_' + cfg.meta_ad_account_id + '/insights?' + qs_({
-    level: 'campaign', time_increment: 1, limit: 500, time_range: JSON.stringify({ since: from, until: to }),
-    fields: 'date_start,account_id,account_currency,campaign_id,campaign_name,spend,impressions,clicks'
-  });
-  var rows = graphPaged_(url).map(metaCampaignRow_);
+  var to = todayKey_(cfg), from = daysAgoKey_(cfg, cfg.sync_days_back), data = [];
+  for (var a = from; a <= to; a = addDays_(a, META_CHUNK_DAYS)) {
+    var b = addDays_(a, META_CHUNK_DAYS - 1);
+    data = data.concat(fetchMetaChunk_(cfg, a, b > to ? to : b));
+  }
+  var rows = data.map(metaAdRow_);
   if (cfg.fx_source === 'nbk' && cfg.meta_currency !== cfg.currency) applyNbkRates_(rows, cfg);
-  lockedWrite_(function () { mergeRows_('Meta_Spend', function (r) { return dateKey_(r.date) + '|' + r.campaign_id; }, rows); });
+  lockedWrite_(function () { replaceMetaAds_(rows, from, addDays_(to, -META_KEEP_DAYS)); });
   log_('INFO', 'Meta', 'синк ' + from + '..' + to + ': строк ' + rows.length);
   return rows.length;
 }
